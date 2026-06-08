@@ -1246,8 +1246,8 @@ input:focus {
   align-items: start;
 }
 
-.builder-form label:nth-of-type(4),
-.builder-form label:nth-of-type(7),
+.builder-form label:nth-of-type(5),
+.builder-form label:nth-of-type(8),
 .builder-form .save-button,
 .builder-form .success-message {
   grid-column: 1 / -1;
@@ -1270,7 +1270,7 @@ input:focus {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 3px) 70% 0 / 24px 100%,
     radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.14), transparent 22%),
-    linear-gradient(135deg, #091128, #020617 72%);
+    linear-gradient(135deg, var(--card-bg, #091128), #020617 72%);
   box-shadow: 0 26px 52px rgba(3, 10, 30, 0.22);
 }
 
@@ -1386,6 +1386,15 @@ input:focus {
   font-size: 14px;
   font-weight: 800;
   text-align: right;
+}
+
+.physical-company {
+  margin-top: 5px;
+  color: var(--card-accent, #7dd3fc);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: right;
+  text-transform: uppercase;
 }
 
 .physical-phone {
@@ -1788,7 +1797,7 @@ input:focus {
 
 .tapmo-hero {
   padding: 20px 18px 0;
-  background: linear-gradient(#020b42 0 42%, #fff 42%);
+  background: linear-gradient(var(--card-bg, #020b42) 0 42%, #fff 42%);
 }
 
 .share-row {
@@ -1892,8 +1901,8 @@ input:focus {
 
 .tapmo-actions .primary {
   color: #fff;
-  border-color: #020b42;
-  background: #020b42;
+  border-color: var(--card-bg, #020b42);
+  background: var(--card-bg, #020b42);
 }
 
 .tapmo-section {
@@ -2142,8 +2151,8 @@ input:focus {
     grid-template-columns: 1fr;
   }
 
-  .builder-form label:nth-of-type(4),
-  .builder-form label:nth-of-type(7),
+  .builder-form label:nth-of-type(5),
+  .builder-form label:nth-of-type(8),
   .builder-form .save-button,
   .builder-form .success-message {
     grid-column: auto;
@@ -3140,4 +3149,144 @@ input:focus {
 .landing-clean .process-network span:nth-child(4) {
   left: 60px;
   bottom: 4px;
+}
+
+.tapmo-page {
+  width: min(760px, 100%);
+  background: #f7f9fc;
+}
+
+.tapmo-topbar {
+  height: 78px;
+  border-bottom: 1px solid #edf1f6;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.tapmo-topbar strong {
+  font-size: 24px;
+}
+
+.tapmo-round {
+  width: 48px;
+  font-size: 28px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.tapmo-hero {
+  padding: 18px 18px 0;
+  background: linear-gradient(var(--card-bg, #020b42) 0 45%, #f7f9fc 45%);
+}
+
+.tapmo-card {
+  min-height: 360px;
+  border-radius: 28px;
+  box-shadow: 0 18px 38px rgba(8, 17, 44, 0.14);
+}
+
+.tapmo-photo {
+  min-height: 360px;
+  border-radius: 28px 0 0 28px;
+  font-size: 82px;
+}
+
+.tapmo-info {
+  gap: 18px;
+  padding: 26px 24px;
+}
+
+.tapmo-info h1 {
+  font-size: clamp(32px, 5vw, 44px);
+}
+
+.tapmo-info p {
+  color: #334155;
+  font-size: clamp(20px, 3.2vw, 27px);
+}
+
+.tapmo-company {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: var(--card-bg, #020b42);
+  background: var(--card-soft, #eef7ff);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.tapmo-logo {
+  width: 118px;
+  border-width: 6px;
+  border-radius: 4px;
+  color: var(--card-bg, #06144a);
+  border-color: var(--card-soft, #eef0f2);
+  font-size: 42px;
+}
+
+.tapmo-actions {
+  padding: 28px 22px 42px;
+}
+
+.tapmo-actions a {
+  min-height: 60px;
+  border-radius: 10px;
+  font-size: clamp(18px, 3vw, 24px);
+  font-weight: 800;
+}
+
+.tapmo-section {
+  padding: 0 22px 32px;
+}
+
+.tapmo-section h2 {
+  margin-bottom: 18px;
+  font-size: clamp(23px, 3.4vw, 29px);
+}
+
+.tapmo-socials {
+  grid-template-columns: repeat(auto-fit, minmax(76px, 92px));
+  gap: 14px;
+}
+
+.tapmo-socials a {
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px #eef2f7;
+}
+
+.tapmo-list {
+  overflow: hidden;
+  border: 1px solid #e6ebf2;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.tapmo-list a {
+  min-height: 88px;
+  padding: 0 18px;
+  border-bottom-color: #eef2f7;
+}
+
+.tapmo-list a:last-child {
+  border-bottom: 0;
+}
+
+.line-icon {
+  color: #475569;
+  font-size: 13px;
+}
+
+.tapmo-list b {
+  font-size: clamp(18px, 3vw, 25px);
+}
+
+.tapmo-list i {
+  font-size: 34px;
+}
+
+.tapmo-powered {
+  padding-bottom: 38px;
+  font-size: 20px;
+}
+
+.tapmo-powered strong {
+  font-size: 25px;
 }

@@ -8,6 +8,7 @@ const emptyCard = {
   name: '',
   mobile: '',
   designation: '',
+  companyName: '',
   officeAddress: '',
   email: '',
   website: '',
@@ -59,6 +60,7 @@ function getVcard(card) {
     'BEGIN:VCARD',
     'VERSION:3.0',
     `FN:${card.name}`,
+    `ORG:${card.companyName || ''}`,
     `TITLE:${card.designation}`,
     `TEL:${card.mobile}`,
     `EMAIL:${card.email}`,
@@ -81,6 +83,23 @@ function getSocialLinks(card) {
     { key: 'instagram', label: 'IG', url: card.instagram, className: 'instagram' },
     { key: 'whatsapp', label: 'WA', url: card.mobile ? `https://wa.me/${card.mobile.replace(/\D/g, '')}` : '', className: 'whatsapp' },
   ].filter((item) => item.url)
+}
+
+function getCompanyTheme(companyName = '') {
+  const palettes = [
+    { bg: '#020b42', accent: '#7dd3fc', soft: '#eef7ff' },
+    { bg: '#064e3b', accent: '#86efac', soft: '#f0fdf4' },
+    { bg: '#7c2d12', accent: '#fdba74', soft: '#fff7ed' },
+    { bg: '#4c1d95', accent: '#c4b5fd', soft: '#f5f3ff' },
+    { bg: '#831843', accent: '#f9a8d4', soft: '#fdf2f8' },
+    { bg: '#1e3a8a', accent: '#bfdbfe', soft: '#eff6ff' },
+  ]
+  const score = companyName
+    .toLowerCase()
+    .split('')
+    .reduce((total, char) => total + char.charCodeAt(0), 0)
+
+  return palettes[score % palettes.length]
 }
 
 function useQrCode(value) {
@@ -254,9 +273,10 @@ function LoginForm({ onSubmit, onBack }) {
 
 function CardPreview({ card, showQr = false }) {
   const publicUrl = useMemo(() => getPublicUrl(card), [card])
+  const theme = getCompanyTheme(card.companyName)
 
   return (
-    <article className="physical-preview-card">
+    <article className="physical-preview-card" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent }}>
       <div className="physical-preview-photo">
         {card.imageUrl ? (
           <img src={formatUrl(card.imageUrl)} alt="" />
@@ -276,6 +296,7 @@ function CardPreview({ card, showQr = false }) {
         <div>
           <div className="physical-signature">{card.name || 'Client Name'}</div>
           <div className="physical-role">{card.designation || 'Designation'}</div>
+          <div className="physical-company">{card.companyName || 'Company Name'}</div>
         </div>
         <div className="physical-phone">{card.mobile || '+91 XXXXX XXXXX'}</div>
         <div className="physical-address">{card.officeAddress || 'Office address'}</div>
@@ -298,8 +319,8 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
   }
 
   function createCard() {
-    if (!card.name.trim() || !card.mobile.trim() || !card.designation.trim() || !card.officeAddress.trim()) {
-      setMessage('Please fill name, mobile number, designation, and office address.')
+    if (!card.name.trim() || !card.mobile.trim() || !card.designation.trim() || !card.companyName.trim() || !card.officeAddress.trim()) {
+      setMessage('Please fill name, mobile number, designation, company name, and office address.')
       return
     }
 
@@ -342,6 +363,10 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
           <label>
             Designation
             <input name="designation" value={card.designation} onChange={updateField} placeholder="Founder, Manager, Intern" />
+          </label>
+          <label>
+            Company Name
+            <input name="companyName" value={card.companyName} onChange={updateField} placeholder="Company name" />
           </label>
           <label>
             Office Address
@@ -398,6 +423,7 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
                   <h3>{savedCard.name}</h3>
                   <p>{savedCard.mobile}</p>
                   <span>{savedCard.designation}</span>
+                  <span>{savedCard.companyName}</span>
                 </div>
                 <QrImage value={getPublicUrl(savedCard)} />
                 <button className="secondary-button" onClick={() => onView(savedCard)}>
@@ -412,26 +438,27 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
   )
 }
 
-function PublicCardPage({ card, onHome }) {
+function PublicCardPage({ card, onClose }) {
   const publicUrl = useMemo(() => getPublicUrl(card), [card])
   const vcardUrl = `data:text/vcard;charset=utf-8,${encodeURIComponent(getVcard(card))}`
   const whatsappNumber = card.mobile.replace(/\D/g, '')
   const websiteUrl = formatUrl(card.website)
   const socialLinks = getSocialLinks(card)
+  const theme = getCompanyTheme(card.companyName)
 
   return (
     <main className="tapmo-page">
       <header className="tapmo-topbar">
-        <button className="tapmo-round" onClick={onHome} aria-label="Close">
+        <button className="tapmo-round" onClick={onClose} aria-label="Close">
           x
         </button>
-        <strong>tapmo.me</strong>
+        <strong>nextgen</strong>
         <button className="tapmo-round menu-icon" aria-label="Menu">
           =
         </button>
       </header>
 
-      <section className="tapmo-hero">
+      <section className="tapmo-hero" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent, '--card-soft': theme.soft }}>
         <div className="share-row">
           <button onClick={() => navigator.share?.({ title: card.name, url: publicUrl })}>Share My Card</button>
         </div>
@@ -442,6 +469,7 @@ function PublicCardPage({ card, onHome }) {
           <div className="tapmo-info">
             <h1>{card.name}</h1>
             <p>{card.designation}</p>
+            {card.companyName && <span className="tapmo-company">{card.companyName}</span>}
             <div className="tapmo-logo">{getInitials(card.name)}</div>
           </div>
         </article>
@@ -473,6 +501,7 @@ function PublicCardPage({ card, onHome }) {
         <h2>Contact info.</h2>
         <div className="tapmo-list">
           <a href={`tel:${card.mobile}`}><span className="line-icon">Phone</span><b>{card.mobile}</b><i>›</i></a>
+          {card.companyName && <a href="#company"><span className="line-icon">Co</span><b>{card.companyName}</b><i>›</i></a>}
           <a href={`https://wa.me/${whatsappNumber}`}><span className="line-icon">WA</span><b>WhatsApp Chat</b><i>›</i></a>
           {card.email && <a href={`mailto:${card.email}`}><span className="line-icon">Mail</span><b>{card.email}</b><i>›</i></a>}
           {websiteUrl && <a href={websiteUrl}><span className="line-icon">Link</span><b>{card.website}</b><i>›</i></a>}
@@ -482,7 +511,7 @@ function PublicCardPage({ card, onHome }) {
 
       <footer className="tapmo-powered">
         <span>Powered by</span>
-        <strong>tapMo</strong>
+        <strong>NextGen</strong>
       </footer>
     </main>
   )
@@ -549,7 +578,16 @@ function App() {
   }
 
   if (screen === 'public' && publicCard) {
-    return <PublicCardPage card={publicCard} onHome={goHome} />
+    return (
+      <PublicCardPage
+        card={publicCard}
+        onClose={() => {
+          window.history.replaceState(null, '', window.location.pathname)
+          setPublicCard(null)
+          setScreen('dashboard')
+        }}
+      />
+    )
   }
 
   return <AdminHome onLogin={() => setScreen('login')} />
