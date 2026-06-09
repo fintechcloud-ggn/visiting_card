@@ -4,6 +4,13 @@ import './App.css'
 
 const storageKey = 'visiting-cards'
 
+const appConfig = {
+  brandName: import.meta.env.VITE_BRAND_NAME || 'nextgen',
+  poweredBy: import.meta.env.VITE_POWERED_BY || 'NextGen',
+  adminUsername: import.meta.env.VITE_ADMIN_USERNAME || 'admin@example.com',
+  adminPassword: import.meta.env.VITE_ADMIN_PASSWORD || 'admin123',
+}
+
 const emptyCard = {
   name: '',
   mobile: '',
@@ -86,20 +93,17 @@ function getSocialLinks(card) {
 }
 
 function getCompanyTheme(companyName = '') {
-  const palettes = [
-    { bg: '#020b42', accent: '#7dd3fc', soft: '#eef7ff' },
-    { bg: '#064e3b', accent: '#86efac', soft: '#f0fdf4' },
-    { bg: '#7c2d12', accent: '#fdba74', soft: '#fff7ed' },
-    { bg: '#4c1d95', accent: '#c4b5fd', soft: '#f5f3ff' },
-    { bg: '#831843', accent: '#f9a8d4', soft: '#fdf2f8' },
-    { bg: '#1e3a8a', accent: '#bfdbfe', soft: '#eff6ff' },
-  ]
-  const score = companyName
-    .toLowerCase()
+  const normalizedName = companyName.trim().toLowerCase() || 'visiting-card'
+  const score = normalizedName
     .split('')
-    .reduce((total, char) => total + char.charCodeAt(0), 0)
+    .reduce((total, char) => ((total << 5) - total + char.charCodeAt(0)) >>> 0, 0)
+  const hue = score % 360
 
-  return palettes[score % palettes.length]
+  return {
+    bg: `hsl(${hue} 74% 16%)`,
+    accent: `hsl(${(hue + 38) % 360} 86% 72%)`,
+    soft: `hsl(${hue} 72% 96%)`,
+  }
 }
 
 function useQrCode(value) {
@@ -143,44 +147,20 @@ function AdminHome({ onLogin }) {
         </nav>
 
         <div className="landing-process-grid">
-          <aside className="process-card">
-            <div className="process-line" />
-            <div className="process-avatar avatar-top"><span className="mini-face" /></div>
-            <div className="process-step process-step-1"><b>1</b><span>Profile into creating customer profile</span></div>
-            <div className="process-arrow arrow-down" />
-            <div className="process-black-card">
-              <div className="mini-avatar"><span className="mini-face" /></div>
-              <strong>Premium Card</strong>
-              <div className="mini-card-qr" />
-            </div>
-            <div className="process-step process-step-2"><b>2</b><span>Phone received a direct connection</span></div>
-            <div className="process-phone">
-              <div className="mini-avatar"><span className="mini-face" /></div>
-              <strong>Premium Card</strong>
-            </div>
-            <div className="process-device" />
-            <div className="process-waves" />
-            <div className="process-step process-step-3"><b>3</b><span>An network expanding digital cards</span></div>
-            <div className="process-network">
-              <span><i className="mini-face" /></span>
-              <span><i className="mini-face" /></span>
-              <span><i className="mini-face" /></span>
-              <span><i className="mini-face" /></span>
-            </div>
+          <aside className="process-card process-card-image">
+            <img src="/Sidebar.png?v=20260609-1410" alt="Digital visiting card process" />
           </aside>
 
           <section className="landing-connect-copy">
             <h1>Built to connect. Share your passion, not just a number.</h1>
             <div className="landing-avatar">
-              <div className="landing-face" />
+              <img src="/sidebar-avatar.png?v=20260609-1425" alt="Profile avatar" />
             </div>
             <div className="landing-console">
               <h2>Admin console data</h2>
               <p>Interactive analytics, admin controls, and profile management.</p>
               <div className="landing-console-window">
-                <div />
-                <div />
-                <div />
+                <img src="/image.png" alt="Black QR visiting card held in hand" />
               </div>
             </div>
           </section>
@@ -219,7 +199,7 @@ function AdminHome({ onLogin }) {
   )
 }
 
-function LoginForm({ onSubmit, onBack }) {
+function LoginForm({ onSubmit, onBack, error }) {
   return (
     <main className="admin-login-page">
       <section className="admin-login-stage">
@@ -245,11 +225,12 @@ function LoginForm({ onSubmit, onBack }) {
           <h1>Welcome back!</h1>
           <p>Please enter your details to sign in.</p>
         <label>
-          <input type="email" placeholder="Username" required />
+          <input name="username" type="email" placeholder="Username" required />
         </label>
         <label>
-          <input type="password" placeholder="Password" required />
+          <input name="password" type="password" placeholder="Password" required />
         </label>
+        {error && <p className="login-error">{error}</p>}
         <a className="forgot-link" href="#forgot">
           Forgot Password?
         </a>
@@ -271,12 +252,51 @@ function LoginForm({ onSubmit, onBack }) {
   )
 }
 
-function CardPreview({ card, showQr = false }) {
-  const publicUrl = useMemo(() => getPublicUrl(card), [card])
-  const theme = getCompanyTheme(card.companyName)
-
+function CardBack({ card }) {
   return (
-    <article className="physical-preview-card" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent }}>
+    <article className="physical-preview-card physical-preview-card-back">
+      <div className="physical-back-logo" aria-label="VC stands for Visiting Card">
+        <strong>VC</strong>
+        <span>VISITING CARD</span>
+      </div>
+
+      <div className="physical-back-title">
+        <b>{card.designation || 'Designation'} - {card.companyName || 'Company Name'}</b>
+      </div>
+
+      <ul className="physical-back-list">
+        <li>
+          <span className="back-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 22s7-6.4 7-13A7 7 0 0 0 5 9c0 6.6 7 13 7 13Z" /><circle cx="12" cy="9" r="2.4" /></svg>
+          </span>
+          <b>{card.officeAddress || 'Office address'}</b>
+        </li>
+        <li>
+          <span className="back-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M6.7 3.8 9.4 3c.7-.2 1.4.2 1.7.8l1.2 2.9c.2.6 0 1.2-.4 1.6l-1.5 1.2a13 13 0 0 0 4.1 4.1l1.2-1.5c.4-.5 1-.6 1.6-.4l2.9 1.2c.7.3 1 .9.8 1.7l-.8 2.7c-.2.8-.9 1.3-1.7 1.3C10.4 18.6 4 12.2 4 4.2c0-.8.5-1.5 1.3-1.7Z" /></svg>
+          </span>
+          <b>{card.mobile || '+91 XXXXX XXXXX'}</b>
+        </li>
+        <li>
+          <span className="back-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4Z" /><path d="m4 7 8 6 8-6" /></svg>
+          </span>
+          <b>{card.email || 'company@email.com'}</b>
+        </li>
+        <li>
+          <span className="back-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M3.5 12h17M12 3.5c2.2 2.4 3.3 5.2 3.3 8.5s-1.1 6.1-3.3 8.5c-2.2-2.4-3.3-5.2-3.3-8.5S9.8 5.9 12 3.5Z" /></svg>
+          </span>
+          <b>{card.website || 'www.companyname.com'}</b>
+        </li>
+      </ul>
+    </article>
+  )
+}
+
+function CardFront({ card, publicUrl, showQr = false }) {
+  return (
+    <article className="physical-preview-card physical-preview-card-front">
       <div className="physical-preview-photo">
         {card.imageUrl ? (
           <img src={formatUrl(card.imageUrl)} alt="" />
@@ -303,6 +323,68 @@ function CardPreview({ card, showQr = false }) {
         <div className="physical-chip">{getInitials(card.name)}</div>
       </div>
     </article>
+  )
+}
+
+function PublicCardFront({ card }) {
+  return (
+    <article className="tapmo-card">
+      <div className="tapmo-photo">
+        {card.imageUrl ? <img src={formatUrl(card.imageUrl)} alt={card.name} /> : <span>{getInitials(card.name)[0]}</span>}
+      </div>
+      <div className="tapmo-info">
+        <h1>{card.name}</h1>
+        <p>{card.designation}</p>
+        {card.companyName && <span className="tapmo-company">{card.companyName}</span>}
+        <div className="tapmo-logo">{getInitials(card.name)}</div>
+      </div>
+    </article>
+  )
+}
+
+function FlipCard({ front, back, className = '' }) {
+  const [isFlipped, setIsFlipped] = useState(false)
+
+  function handleKeyDown(event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    setIsFlipped((current) => !current)
+  }
+
+  return (
+    <div className={`flip-card ${isFlipped ? 'is-flipped' : ''} ${className}`}>
+      <div
+        className="flip-card-stage"
+        role="button"
+        tabIndex={0}
+        aria-label={isFlipped ? 'Show front side' : 'Show back side'}
+        onClick={() => setIsFlipped((current) => !current)}
+        onKeyDown={handleKeyDown}
+      >
+        <div className="flip-card-inner">
+          <div className="flip-card-face flip-card-front-face">
+            <span className="physical-side-label">Front</span>
+            {front}
+          </div>
+          <div className="flip-card-face flip-card-back-face">
+            <span className="physical-side-label">Back</span>
+            {back}
+          </div>
+        </div>
+      </div>
+      <span className="flip-card-hint">{isFlipped ? 'Click to view front' : 'Click to view back'}</span>
+    </div>
+  )
+}
+
+function CardPreview({ card, showQr = false }) {
+  const publicUrl = useMemo(() => getPublicUrl(card), [card])
+  const theme = getCompanyTheme(card.companyName)
+
+  return (
+    <div className="physical-card-set" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent }}>
+      <FlipCard front={<CardFront card={card} publicUrl={publicUrl} showQr={showQr} />} back={<CardBack card={card} />} />
+    </div>
   )
 }
 
@@ -424,6 +506,10 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
                   <p>{savedCard.mobile}</p>
                   <span>{savedCard.designation}</span>
                   <span>{savedCard.companyName}</span>
+                  <div className="saved-card-sides">
+                    <b>Front</b>
+                    <b>Back</b>
+                  </div>
                 </div>
                 <QrImage value={getPublicUrl(savedCard)} />
                 <button className="secondary-button" onClick={() => onView(savedCard)}>
@@ -452,7 +538,7 @@ function PublicCardPage({ card, onClose }) {
         <button className="tapmo-round" onClick={onClose} aria-label="Close">
           x
         </button>
-        <strong>nextgen</strong>
+        <strong>{appConfig.brandName}</strong>
         <button className="tapmo-round menu-icon" aria-label="Menu">
           =
         </button>
@@ -462,17 +548,9 @@ function PublicCardPage({ card, onClose }) {
         <div className="share-row">
           <button onClick={() => navigator.share?.({ title: card.name, url: publicUrl })}>Share My Card</button>
         </div>
-        <article className="tapmo-card">
-          <div className="tapmo-photo">
-            {card.imageUrl ? <img src={formatUrl(card.imageUrl)} alt={card.name} /> : <span>{getInitials(card.name)[0]}</span>}
-          </div>
-          <div className="tapmo-info">
-            <h1>{card.name}</h1>
-            <p>{card.designation}</p>
-            {card.companyName && <span className="tapmo-company">{card.companyName}</span>}
-            <div className="tapmo-logo">{getInitials(card.name)}</div>
-          </div>
-        </article>
+        <div className="tapmo-card-set">
+          <FlipCard className="tapmo-flip-card" front={<PublicCardFront card={card} />} back={<CardBack card={card} />} />
+        </div>
       </section>
 
       <section className="tapmo-actions">
@@ -511,7 +589,7 @@ function PublicCardPage({ card, onClose }) {
 
       <footer className="tapmo-powered">
         <span>Powered by</span>
-        <strong>NextGen</strong>
+        <strong>{appConfig.poweredBy}</strong>
       </footer>
     </main>
   )
@@ -520,6 +598,7 @@ function PublicCardPage({ card, onClose }) {
 function App() {
   const [screen, setScreen] = useState('home')
   const [publicCard, setPublicCard] = useState(null)
+  const [loginError, setLoginError] = useState('')
   const [cards, setCards] = useState(() => {
     const savedCards = localStorage.getItem(storageKey)
     return savedCards ? JSON.parse(savedCards) : []
@@ -552,8 +631,19 @@ function App() {
     return (
       <LoginForm
         onBack={goHome}
+        error={loginError}
         onSubmit={(event) => {
           event.preventDefault()
+          const formData = new FormData(event.currentTarget)
+          const username = formData.get('username')
+          const password = formData.get('password')
+
+          if (username !== appConfig.adminUsername || password !== appConfig.adminPassword) {
+            setLoginError('Invalid username or password.')
+            return
+          }
+
+          setLoginError('')
           setScreen('dashboard')
         }}
       />
