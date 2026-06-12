@@ -18,4 +18,10 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    files: ['server.js', 'migrate-data.js', 'backfill-qr.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])

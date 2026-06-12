@@ -7,8 +7,8 @@ const storageKey = 'visiting-cards'
 const appConfig = {
   brandName: import.meta.env.VITE_BRAND_NAME || 'nextgen',
   poweredBy: import.meta.env.VITE_POWERED_BY || 'NextGen',
-  adminUsername: import.meta.env.VITE_ADMIN_USERNAME || 'admin@example.com',
-  adminPassword: import.meta.env.VITE_ADMIN_PASSWORD || 'admin123',
+  adminUsername: import.meta.env.VITE_ADMIN_USERNAME || 'nextgen@gmail.com',
+  adminPassword: import.meta.env.VITE_ADMIN_PASSWORD || 'nextgen@123',
 }
 
 const emptyCard = {
@@ -40,6 +40,23 @@ function decodeCard(value) {
 
 function getPublicUrl(card) {
   return `${window.location.origin}${window.location.pathname}#/card/${encodeCard(card)}`
+}
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(path, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+    ...options,
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.message || 'Request failed.')
+  }
+
+  return response.json()
 }
 
 function getInitials(name) {
@@ -135,6 +152,14 @@ function QrImage({ value }) {
   const src = useQrCode(value)
 
   return src ? <img className="qr-image" src={src} alt="Scan visiting card QR code" /> : null
+}
+
+function QrDisplay({ card, value }) {
+  if (card?.qrCode) {
+    return <img className="qr-image" src={card.qrCode} alt="QR code stored in S3" />
+  }
+
+  return <QrImage value={value} />
 }
 
 function AdminHome({ onLogin }) {
@@ -400,7 +425,7 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
     }))
   }
 
-  function createCard() {
+  async function createCard() {
     if (!card.name.trim() || !card.mobile.trim() || !card.designation.trim() || !card.companyName.trim() || !card.officeAddress.trim()) {
       setMessage('Please fill name, mobile number, designation, company name, and office address.')
       return
@@ -412,12 +437,16 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
       createdAt: new Date().toISOString(),
     }
 
-    onCreate(nextCard)
-    setCard(emptyCard)
-    setMessage('Card created successfully. You can create another card now.')
-    setTimeout(() => {
-      cardsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 50)
+    try {
+      await onCreate(nextCard)
+      setCard(emptyCard)
+      setMessage('Card created successfully and saved in database.')
+      setTimeout(() => {
+        cardsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
+    } catch (error) {
+      setMessage(error.message || 'Card could not be saved. Please try again.')
+    }
   }
 
   return (
@@ -511,7 +540,7 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
                     <b>Back</b>
                   </div>
                 </div>
-                <QrImage value={getPublicUrl(savedCard)} />
+                <QrDisplay card={savedCard} value={getPublicUrl(savedCard)} />
                 <button className="secondary-button" onClick={() => onView(savedCard)}>
                   Open
                 </button>
@@ -609,6 +638,22 @@ function App() {
   }, [cards])
 
   useEffect(() => {
+    let isActive = true
+
+    apiRequest('/api/cards')
+      .then((databaseCards) => {
+        if (isActive) setCards(databaseCards)
+      })
+      .catch(() => {
+        // Keep the localStorage fallback when the API is not running.
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [])
+
+  useEffect(() => {
     function syncHashCard() {
       const match = window.location.hash.match(/^#\/card\/(.+)$/)
       const card = match ? decodeCard(match[1]) : null
@@ -632,19 +677,28 @@ function App() {
       <LoginForm
         onBack={goHome}
         error={loginError}
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault()
           const formData = new FormData(event.currentTarget)
           const username = formData.get('username')
           const password = formData.get('password')
 
-          if (username !== appConfig.adminUsername || password !== appConfig.adminPassword) {
-            setLoginError('Invalid username or password.')
-            return
-          }
+          try {
+            await apiRequest('/api/login', {
+              method: 'POST',
+              body: JSON.stringify({ username, password }),
+            })
+            setLoginError('')
+            setScreen('dashboard')
+          } catch {
+            if (username !== appConfig.adminUsername || password !== appConfig.adminPassword) {
+              setLoginError('Invalid username or password.')
+              return
+            }
 
-          setLoginError('')
-          setScreen('dashboard')
+            setLoginError('')
+            setScreen('dashboard')
+          }
         }}
       />
     )
@@ -655,8 +709,13 @@ function App() {
       <AdminDashboard
         cards={cards}
         onLogout={goHome}
-        onCreate={(card) => {
-          setCards((current) => [card, ...current])
+        onCreate={async (card) => {
+          const savedCard = await apiRequest('/api/cards', {
+            method: 'POST',
+            body: JSON.stringify(card),
+          })
+          setCards((current) => [savedCard, ...current])
+          return savedCard
         }}
         onView={(card) => {
           setPublicCard(card)
