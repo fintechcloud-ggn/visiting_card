@@ -102,7 +102,11 @@ function getShareableCard(card) {
   }
 }
 
-function buildPublicUrl(card) {
+function buildPublicUrl(card, cardSlug) {
+  if (cardSlug) {
+    return `${publicBaseUrl}/#/card-id/${encodeURIComponent(cardSlug)}`
+  }
+
   return `${publicBaseUrl}/#/card/${encodeCard(getShareableCard(card))}`
 }
 
@@ -147,16 +151,21 @@ async function uploadProfileImage(imageUrl, cardSlug) {
   const extension = getImageExtension(image.contentType)
   const key = `profile-images/${cardSlug}.${extension}`
 
-  await s3Client.send(
-    new PutObjectCommand({
-      Bucket: s3Bucket,
-      Key: key,
-      Body: image.buffer,
-      ContentType: image.contentType,
-    }),
-  )
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: s3Bucket,
+        Key: key,
+        Body: image.buffer,
+        ContentType: image.contentType,
+      }),
+    )
 
-  return buildS3PublicUrl(key)
+    return buildS3PublicUrl(key)
+  } catch (error) {
+    console.warn(`S3 profile upload failed for ${cardSlug}. Saving image in database instead.`, error.message)
+    return imageUrl
+  }
 }
 
 async function uploadQrCode(card, cardSlug) {
@@ -164,7 +173,7 @@ async function uploadQrCode(card, cardSlug) {
     return ''
   }
 
-  const publicUrl = buildPublicUrl(card)
+  const publicUrl = buildPublicUrl(card, cardSlug)
   const buffer = await QRCode.toBuffer(publicUrl, {
     width: 900,
     margin: 2,
@@ -176,16 +185,21 @@ async function uploadQrCode(card, cardSlug) {
   })
 
   const key = buildQrKey(cardSlug)
-  await s3Client.send(
-    new PutObjectCommand({
-      Bucket: s3Bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: 'image/png',
-    }),
-  )
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: s3Bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: 'image/png',
+      }),
+    )
 
-  return buildS3PublicUrl(key)
+    return buildS3PublicUrl(key)
+  } catch (error) {
+    console.warn(`S3 QR upload failed for ${cardSlug}. QR will be generated in the browser instead.`, error.message)
+    return ''
+  }
 }
 
 app.post('/api/login', (request, response) => {
@@ -202,6 +216,17 @@ app.post('/api/login', (request, response) => {
 app.get('/api/cards', async (_request, response) => {
   const [rows] = await pool.query('SELECT * FROM digital_visiting_cards ORDER BY created_at DESC')
   response.json(rows.map(rowToCard))
+})
+
+app.get('/api/cards/:id', async (request, response) => {
+  const [rows] = await pool.query('SELECT * FROM digital_visiting_cards WHERE card_slug = ? LIMIT 1', [request.params.id])
+
+  if (!rows[0]) {
+    response.status(404).json({ message: 'Card not found.' })
+    return
+  }
+
+  response.json(rowToCard(rows[0]))
 })
 
 app.post('/api/cards', async (request, response) => {

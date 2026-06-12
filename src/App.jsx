@@ -9,6 +9,7 @@ const appConfig = {
   poweredBy: import.meta.env.VITE_POWERED_BY || 'NextGen',
   adminUsername: import.meta.env.VITE_ADMIN_USERNAME || 'nextgen@gmail.com',
   adminPassword: import.meta.env.VITE_ADMIN_PASSWORD || 'nextgen@123',
+  publicBaseUrl: import.meta.env.VITE_PUBLIC_BASE_URL?.replace(/\/$/, '') || '',
   useApi: import.meta.env.VITE_USE_API === 'true',
 }
 
@@ -49,8 +50,19 @@ function getShareableCard(card) {
   }
 }
 
+function getAppBaseUrl() {
+  const baseUrl = appConfig.publicBaseUrl || `${window.location.origin}${window.location.pathname.replace(/\/$/, '')}`
+  return baseUrl
+}
+
 function getPublicUrl(card) {
-  return `${window.location.origin}${window.location.pathname}#/card/${encodeCard(getShareableCard(card))}`
+  const baseUrl = getAppBaseUrl()
+
+  if (appConfig.useApi && card.id) {
+    return `${baseUrl}/#/card-id/${encodeURIComponent(card.id)}`
+  }
+
+  return `${baseUrl}/#/card/${encodeCard(getShareableCard(card))}`
 }
 
 async function apiRequest(path, options = {}) {
@@ -121,6 +133,22 @@ function getSocialLinks(card) {
   ].filter((item) => item.url)
 }
 
+function getDisplayDetails(card) {
+  return [
+    { label: 'Name', value: card.name },
+    { label: 'Mobile', value: card.mobile },
+    { label: 'Designation', value: card.designation },
+    { label: 'Company', value: card.companyName },
+    { label: 'Office address', value: card.officeAddress },
+    { label: 'Email', value: card.email },
+    { label: 'Website', value: card.website },
+    { label: 'LinkedIn', value: card.linkedin },
+    { label: 'YouTube', value: card.youtube },
+    { label: 'Facebook', value: card.facebook },
+    { label: 'Instagram', value: card.instagram },
+  ].filter((detail) => detail.value)
+}
+
 function getCompanyTheme(companyName = '') {
   const normalizedName = companyName.trim().toLowerCase() || 'visiting-card'
   const score = normalizedName
@@ -169,7 +197,7 @@ function QrImage({ value }) {
 }
 
 function QrDisplay({ card, value }) {
-  if (card?.qrCode) {
+  if (!value && card?.qrCode) {
     return <img className="qr-image" src={card.qrCode} alt="QR code stored in S3" />
   }
 
@@ -604,12 +632,67 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
 }
 
 function PublicCardPage({ card, onClose }) {
+  const [shareMessage, setShareMessage] = useState('')
+  const [isShareOpen, setIsShareOpen] = useState(false)
   const publicUrl = useMemo(() => getPublicUrl(card), [card])
   const vcardUrl = `data:text/vcard;charset=utf-8,${encodeURIComponent(getVcard(card))}`
-  const whatsappNumber = card.mobile.replace(/\D/g, '')
+  const whatsappNumber = card.mobile?.replace(/\D/g, '') || ''
   const websiteUrl = formatUrl(card.website)
   const socialLinks = getSocialLinks(card)
+  const displayDetails = getDisplayDetails(card)
   const theme = getCompanyTheme(card.companyName)
+
+  const shareText = `${card.name || 'Visiting card'}${card.designation ? ` - ${card.designation}` : ''}\n${publicUrl}`
+  const encodedShareText = encodeURIComponent(shareText)
+  const encodedShareSubject = encodeURIComponent(`${card.name || 'Visiting card'} - Digital visiting card`)
+
+  async function shareNative() {
+    const shareData = {
+      title: card.name || 'Visiting card',
+      text: card.designation ? `${card.name} - ${card.designation}` : card.name || 'Visiting card',
+      url: publicUrl,
+    }
+
+    try {
+      if (navigator.share && window.isSecureContext) {
+        await navigator.share(shareData)
+        setShareMessage('')
+        return
+      }
+
+      setShareMessage('More share options need HTTPS. Use any option below.')
+    } catch (error) {
+      if (error.name === 'AbortError') return
+      setShareMessage('More share options need HTTPS. Use any option below.')
+    }
+  }
+
+  async function copyCardLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl)
+      setShareMessage('Card link copied.')
+    } catch {
+      setShareMessage('Copy this link from the browser address bar.')
+    }
+  }
+
+  async function shareCard() {
+    setShareMessage('')
+    setIsShareOpen((current) => !current)
+
+    if (navigator.share && window.isSecureContext) {
+      try {
+        await navigator.share({
+          title: card.name || 'Visiting card',
+          text: card.designation ? `${card.name} - ${card.designation}` : card.name || 'Visiting card',
+          url: publicUrl,
+        })
+        setIsShareOpen(false)
+      } catch (error) {
+        if (error.name !== 'AbortError') setIsShareOpen(true)
+      }
+    }
+  }
 
   return (
     <main className="tapmo-page">
@@ -625,10 +708,21 @@ function PublicCardPage({ card, onClose }) {
 
       <section className="tapmo-hero" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent, '--card-soft': theme.soft }}>
         <div className="share-row">
-          <button onClick={() => navigator.share?.({ title: card.name, url: publicUrl })}>Share My Card</button>
+          <button type="button" onClick={shareCard}>Share My Card</button>
         </div>
+        {isShareOpen && (
+          <div className="share-options" aria-label="Share options">
+            <button type="button" onClick={shareNative}>More</button>
+            <a href={`https://wa.me/?text=${encodedShareText}`}>WhatsApp</a>
+            <a href={`sms:&body=${encodedShareText}`}>SMS</a>
+            <a href={`mailto:?subject=${encodedShareSubject}&body=${encodedShareText}`}>Email</a>
+            <a href={`https://t.me/share/url?url=${encodeURIComponent(publicUrl)}&text=${encodeURIComponent(card.name || 'Visiting card')}`}>Telegram</a>
+            <button type="button" onClick={copyCardLink}>Copy Link</button>
+          </div>
+        )}
+        {shareMessage && <p className="share-status">{shareMessage}</p>}
         <div className="tapmo-card-set">
-          <FlipCard className="tapmo-flip-card" front={<PublicCardFront card={card} />} back={<CardBack card={card} />} />
+          <PublicCardFront card={card} />
         </div>
       </section>
 
@@ -655,14 +749,26 @@ function PublicCardPage({ card, onClose }) {
       )}
 
       <section className="tapmo-section">
-        <h2>Contact info.</h2>
+        <h2>All card details</h2>
+        <div className="tapmo-detail-grid">
+          {displayDetails.map((detail) => (
+            <div className="tapmo-detail-row" key={detail.label}>
+              <span>{detail.label}</span>
+              <b>{detail.value}</b>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="tapmo-section">
+        <h2>Quick actions</h2>
         <div className="tapmo-list">
           <a href={`tel:${card.mobile}`}><span className="line-icon">Phone</span><b>{card.mobile}</b><i>›</i></a>
           {card.companyName && <a href="#company"><span className="line-icon">Co</span><b>{card.companyName}</b><i>›</i></a>}
-          <a href={`https://wa.me/${whatsappNumber}`}><span className="line-icon">WA</span><b>WhatsApp Chat</b><i>›</i></a>
+          {whatsappNumber && <a href={`https://wa.me/${whatsappNumber}`}><span className="line-icon">WA</span><b>WhatsApp Chat</b><i>›</i></a>}
           {card.email && <a href={`mailto:${card.email}`}><span className="line-icon">Mail</span><b>{card.email}</b><i>›</i></a>}
           {websiteUrl && <a href={websiteUrl}><span className="line-icon">Link</span><b>{card.website}</b><i>›</i></a>}
-          <a href={`https://maps.google.com/?q=${encodeURIComponent(card.officeAddress)}`}><span className="line-icon">Pin</span><b>{card.officeAddress}</b><i>›</i></a>
+          {card.officeAddress && <a href={`https://maps.google.com/?q=${encodeURIComponent(card.officeAddress)}`}><span className="line-icon">Pin</span><b>{card.officeAddress}</b><i>›</i></a>}
         </div>
       </section>
 
@@ -706,16 +812,37 @@ function App() {
   }, [])
 
   useEffect(() => {
+    let isActive = true
+
     function syncHashCard() {
-      const match = window.location.hash.match(/^#\/card\/(.+)$/)
-      const card = match ? decodeCard(match[1]) : null
-      setPublicCard(card)
-      if (card) setScreen('public')
+      const cardIdMatch = window.location.hash.match(/^#\/card-id\/([^/?#]+)$/)
+      if (cardIdMatch) {
+        const cardId = decodeURIComponent(cardIdMatch[1])
+        setScreen('public')
+        apiRequest(`/api/cards/${encodeURIComponent(cardId)}`)
+          .then((card) => {
+            if (isActive) setPublicCard(card)
+          })
+          .catch(() => {
+            if (isActive) setPublicCard(null)
+          })
+        return
+      }
+
+      const cardMatch = window.location.hash.match(/^#\/card\/(.+)$/)
+      const card = cardMatch ? decodeCard(cardMatch[1]) : null
+      if (isActive) {
+        setPublicCard(card)
+        if (card) setScreen('public')
+      }
     }
 
     syncHashCard()
     window.addEventListener('hashchange', syncHashCard)
-    return () => window.removeEventListener('hashchange', syncHashCard)
+    return () => {
+      isActive = false
+      window.removeEventListener('hashchange', syncHashCard)
+    }
   }, [])
 
   function goHome() {
@@ -784,8 +911,11 @@ function App() {
           return savedCard
         }}
         onView={(card) => {
-          setPublicCard(card)
-          window.location.hash = `/card/${encodeCard(card)}`
+          const publicCard = appConfig.useApi ? card : getShareableCard(card)
+          setPublicCard(publicCard)
+          window.location.hash = appConfig.useApi && card.id
+            ? `/card-id/${encodeURIComponent(card.id)}`
+            : `/card/${encodeCard(publicCard)}`
           setScreen('public')
         }}
       />
@@ -802,6 +932,23 @@ function App() {
           setScreen('dashboard')
         }}
       />
+    )
+  }
+
+  if (screen === 'public') {
+    return (
+      <main className="tapmo-page">
+        <header className="tapmo-topbar">
+          <button className="tapmo-round" onClick={goHome} aria-label="Close">
+            x
+          </button>
+          <strong>{appConfig.brandName}</strong>
+          <span />
+        </header>
+        <section className="tapmo-section public-loading">
+          <h2>Loading card...</h2>
+        </section>
+      </main>
     )
   }
 
