@@ -25,7 +25,7 @@ const s3Client = s3Bucket && s3Region
     })
   : null
 
-app.use(express.json({ limit: '1mb' }))
+app.use(express.json({ limit: '8mb' }))
 
 const pool = mysql.createPool({
   host: env(process.env.DB_HOST),
@@ -51,7 +51,7 @@ async function ensureSchema() {
       address TEXT,
       country VARCHAR(100),
       city VARCHAR(100),
-      profile_image VARCHAR(255),
+      profile_image LONGTEXT,
       company_logo VARCHAR(255),
       linkedin_url VARCHAR(255),
       facebook_url VARCHAR(255),
@@ -66,6 +66,8 @@ async function ensureSchema() {
       updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )
   `)
+
+  await pool.query('ALTER TABLE digital_visiting_cards MODIFY COLUMN profile_image LONGTEXT')
 }
 
 function rowToCard(row) {
@@ -92,8 +94,16 @@ function encodeCard(card) {
   return Buffer.from(encodeURIComponent(JSON.stringify(card))).toString('base64')
 }
 
+function getShareableCard(card) {
+  return {
+    ...card,
+    imageUrl: typeof card.imageUrl === 'string' && card.imageUrl.startsWith('data:image/') ? '' : card.imageUrl,
+    qrCode: '',
+  }
+}
+
 function buildPublicUrl(card) {
-  return `${publicBaseUrl}/#/card/${encodeCard(card)}`
+  return `${publicBaseUrl}/#/card/${encodeCard(getShareableCard(card))}`
 }
 
 function buildQrKey(cardSlug) {
@@ -104,9 +114,54 @@ function buildS3PublicUrl(key) {
   return `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${key}`
 }
 
+function getDataImage(value) {
+  if (typeof value !== 'string') return null
+
+  const match = value.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/)
+  if (!match) return null
+
+  return {
+    contentType: match[1],
+    buffer: Buffer.from(match[2], 'base64'),
+  }
+}
+
+function getImageExtension(contentType) {
+  return {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+  }[contentType] || 'png'
+}
+
+async function uploadProfileImage(imageUrl, cardSlug) {
+  const image = getDataImage(imageUrl)
+  if (!image) return imageUrl || ''
+
+  if (!s3Client || !s3Bucket || !s3Region) {
+    return imageUrl
+  }
+
+  const extension = getImageExtension(image.contentType)
+  const key = `profile-images/${cardSlug}.${extension}`
+
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: s3Bucket,
+      Key: key,
+      Body: image.buffer,
+      ContentType: image.contentType,
+    }),
+  )
+
+  return buildS3PublicUrl(key)
+}
+
 async function uploadQrCode(card, cardSlug) {
   if (!s3Client || !s3Bucket || !s3Region) {
-    throw new Error('AWS S3 is not configured.')
+    return ''
   }
 
   const publicUrl = buildPublicUrl(card)
@@ -153,7 +208,9 @@ app.post('/api/cards', async (request, response) => {
   try {
     const card = request.body || {}
     const cardSlug = card.id || `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const qrCodeUrl = await uploadQrCode(card, cardSlug)
+    const imageUrl = await uploadProfileImage(card.imageUrl, cardSlug)
+    const cardToSave = { ...card, imageUrl }
+    const qrCodeUrl = await uploadQrCode(cardToSave, cardSlug)
 
     await pool.execute(
       `INSERT INTO digital_visiting_cards
@@ -181,32 +238,32 @@ app.post('/api/cards', async (request, response) => {
         card_theme = VALUES(card_theme),
         status = VALUES(status)`,
       [
-        card.name,
-        card.designation || null,
-        card.companyName || null,
-        card.mobile || null,
-        (card.mobile || '').replace(/\D/g, ''),
-        card.email || null,
-        card.website || null,
-        card.officeAddress || null,
+        cardToSave.name,
+        cardToSave.designation || null,
+        cardToSave.companyName || null,
+        cardToSave.mobile || null,
+        (cardToSave.mobile || '').replace(/\D/g, ''),
+        cardToSave.email || null,
+        cardToSave.website || null,
+        cardToSave.officeAddress || null,
         '',
         '',
-        card.imageUrl || null,
+        cardToSave.imageUrl || null,
         '',
-        card.linkedin || null,
-        card.facebook || null,
-        card.youtube || null,
-        card.instagram || null,
+        cardToSave.linkedin || null,
+        cardToSave.facebook || null,
+        cardToSave.youtube || null,
+        cardToSave.instagram || null,
         '',
         qrCodeUrl,
-        card.companyName || '',
+        cardToSave.companyName || '',
         cardSlug,
-        new Date(card.createdAt || Date.now()),
+        new Date(cardToSave.createdAt || Date.now()),
       ],
     )
 
     const [rows] = await pool.query('SELECT * FROM digital_visiting_cards WHERE card_slug = ?', [cardSlug])
-    const savedCard = rows[0] ? rowToCard(rows[0]) : { ...card, id: cardSlug, qrCode: qrCodeUrl }
+    const savedCard = rows[0] ? rowToCard(rows[0]) : { ...cardToSave, id: cardSlug, qrCode: qrCodeUrl }
 
     response.status(201).json(savedCard)
   } catch (error) {

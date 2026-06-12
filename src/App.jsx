@@ -9,6 +9,7 @@ const appConfig = {
   poweredBy: import.meta.env.VITE_POWERED_BY || 'NextGen',
   adminUsername: import.meta.env.VITE_ADMIN_USERNAME || 'nextgen@gmail.com',
   adminPassword: import.meta.env.VITE_ADMIN_PASSWORD || 'nextgen@123',
+  useApi: import.meta.env.VITE_USE_API === 'true',
 }
 
 const emptyCard = {
@@ -38,8 +39,18 @@ function decodeCard(value) {
   }
 }
 
+function getShareableCard(card) {
+  const imageUrl = card.imageUrl?.startsWith('data:image/') ? '' : card.imageUrl
+
+  return {
+    ...card,
+    imageUrl,
+    qrCode: '',
+  }
+}
+
 function getPublicUrl(card) {
-  return `${window.location.origin}${window.location.pathname}#/card/${encodeCard(card)}`
+  return `${window.location.origin}${window.location.pathname}#/card/${encodeCard(getShareableCard(card))}`
 }
 
 async function apiRequest(path, options = {}) {
@@ -96,7 +107,8 @@ function getVcard(card) {
 
 function formatUrl(value) {
   if (!value) return ''
-  return value.startsWith('http') ? value : `https://${value}`
+  if (/^(https?:|data:image\/|blob:)/i.test(value)) return value
+  return `https://${value}`
 }
 
 function getSocialLinks(card) {
@@ -138,6 +150,8 @@ function useQrCode(value) {
       },
     }).then((dataUrl) => {
       if (isActive) setSrc(dataUrl)
+    }).catch(() => {
+      if (isActive) setSrc('')
     })
 
     return () => {
@@ -417,12 +431,44 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
   const [card, setCard] = useState(emptyCard)
   const [message, setMessage] = useState('')
   const cardsSectionRef = useRef(null)
+  const imageInputRef = useRef(null)
 
   function updateField(event) {
     setCard((current) => ({
       ...current,
       [event.target.name]: event.target.value,
     }))
+  }
+
+  function uploadImage(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setMessage('Please upload an image file.')
+      event.target.value = ''
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage('Please upload an image smaller than 2 MB.')
+      event.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCard((current) => ({
+        ...current,
+        imageUrl: reader.result,
+      }))
+      setMessage('')
+    }
+    reader.onerror = () => {
+      setMessage('Image could not be uploaded. Please try another file.')
+      event.target.value = ''
+    }
+    reader.readAsDataURL(file)
   }
 
   async function createCard() {
@@ -440,6 +486,7 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
     try {
       await onCreate(nextCard)
       setCard(emptyCard)
+      if (imageInputRef.current) imageInputRef.current.value = ''
       setMessage('Card created successfully and saved in database.')
       setTimeout(() => {
         cardsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -492,8 +539,11 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
             <input name="website" value={card.website} onChange={updateField} placeholder="www.example.com" />
           </label>
           <label>
-            Image URL
+            Image URL or Upload
             <input name="imageUrl" value={card.imageUrl} onChange={updateField} placeholder="https://example.com/photo.jpg" />
+            <span className="image-upload-row">
+              <input ref={imageInputRef} type="file" accept="image/*" onChange={uploadImage} />
+            </span>
           </label>
           <label>
             LinkedIn
@@ -638,6 +688,8 @@ function App() {
   }, [cards])
 
   useEffect(() => {
+    if (!appConfig.useApi) return
+
     let isActive = true
 
     apiRequest('/api/cards')
@@ -683,6 +735,17 @@ function App() {
           const username = formData.get('username')
           const password = formData.get('password')
 
+          if (username === appConfig.adminUsername && password === appConfig.adminPassword) {
+            setLoginError('')
+            setScreen('dashboard')
+            return
+          }
+
+          if (!appConfig.useApi) {
+            setLoginError('Invalid username or password.')
+            return
+          }
+
           try {
             await apiRequest('/api/login', {
               method: 'POST',
@@ -710,10 +773,13 @@ function App() {
         cards={cards}
         onLogout={goHome}
         onCreate={async (card) => {
-          const savedCard = await apiRequest('/api/cards', {
-            method: 'POST',
-            body: JSON.stringify(card),
-          })
+          const savedCard = appConfig.useApi
+            ? await apiRequest('/api/cards', {
+                method: 'POST',
+                body: JSON.stringify(card),
+              })
+            : card
+
           setCards((current) => [savedCard, ...current])
           return savedCard
         }}
