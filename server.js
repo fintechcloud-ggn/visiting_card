@@ -302,13 +302,19 @@ app.get('*', (_request, response) => {
   response.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
-ensureSchema()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`API server running on http://localhost:${port}`)
+export default app;
+
+if (!process.env.VERCEL) {
+  ensureSchema()
+    .then(() => {
+      app.listen(port, () => {
+        console.log(`API server running on http://localhost:${port}`)
+      })
     })
-  })
-  .catch((error) => {
-    console.error('Failed to initialize database schema:', error)
-    process.exit(1)
-  })
+    .catch((error) => {
+      console.error('Failed to initialize database schema:', error)
+      process.exit(1)
+    })
+} else {
+  ensureSchema().catch((err) => console.error('Failed to initialize schema in Vercel:', err))
+}
