@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { PutObjectCommand, DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import express from 'express'
 import mysql from 'mysql2/promise'
 import QRCode from 'qrcode'
@@ -116,6 +116,14 @@ function buildQrKey(cardSlug) {
 
 function buildS3PublicUrl(key) {
   return `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${key}`
+}
+
+function extractS3Key(url) {
+  const prefix = `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/`
+  if (url && url.startsWith(prefix)) {
+    return url.substring(prefix.length)
+  }
+  return null
 }
 
 function getDataImage(value) {
@@ -293,6 +301,34 @@ app.post('/api/cards', async (request, response) => {
     response.status(201).json(savedCard)
   } catch (error) {
     response.status(500).json({ message: error.message || 'Failed to upload QR code to S3.' })
+  }
+})
+
+app.delete('/api/cards/:id', async (request, response) => {
+  try {
+    const cardSlug = request.params.id
+    const [rows] = await pool.query('SELECT profile_image, qr_code FROM digital_visiting_cards WHERE card_slug = ? LIMIT 1', [cardSlug])
+
+    if (rows[0]) {
+      const { profile_image, qr_code } = rows[0]
+
+      if (s3Client && s3Bucket) {
+        const qrKey = extractS3Key(qr_code)
+        if (qrKey) {
+          await s3Client.send(new DeleteObjectCommand({ Bucket: s3Bucket, Key: qrKey })).catch((err) => console.warn(`Failed to delete QR from S3: ${err.message}`))
+        }
+
+        const imgKey = extractS3Key(profile_image)
+        if (imgKey) {
+          await s3Client.send(new DeleteObjectCommand({ Bucket: s3Bucket, Key: imgKey })).catch((err) => console.warn(`Failed to delete profile image from S3: ${err.message}`))
+        }
+      }
+    }
+
+    await pool.execute('DELETE FROM digital_visiting_cards WHERE card_slug = ?', [cardSlug])
+    response.json({ ok: true })
+  } catch (error) {
+    response.status(500).json({ message: error.message || 'Failed to delete card.' })
   }
 })
 

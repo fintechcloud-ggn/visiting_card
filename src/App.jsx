@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { FaChevronRight } from 'react-icons/fa'
 import QRCode from 'qrcode'
 import './App.css'
 
@@ -566,7 +567,7 @@ function ShareCardModal({
   )
 }
 
-function AdminDashboard({ cards, onCreate, onLogout, onView }) {
+function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
   const [card, setCard] = useState(emptyCard)
   const [message, setMessage] = useState('')
   const cardsSectionRef = useRef(null)
@@ -730,9 +731,14 @@ function AdminDashboard({ cards, onCreate, onLogout, onView }) {
                   </div>
                 </div>
                 <QrDisplay card={savedCard} value={getPublicUrl(savedCard)} />
-                <button className="secondary-button" onClick={() => onView(savedCard)}>
-                  Open
-                </button>
+                <div className="saved-card-actions">
+                  <button className="secondary-button" onClick={() => onView(savedCard)}>
+                    Open
+                  </button>
+                  <button className="danger-button" onClick={() => onDelete(savedCard)}>
+                    Delete
+                  </button>
+                </div>
               </article>
             ))
           )}
@@ -868,7 +874,7 @@ function PublicCardPage({ card, onClose }) {
                 <>
                   <span className="contact-icon-wrap"><ContactIcon name={item.icon} /></span>
                   <b>{item.label}</b>
-                  {item.href && <i>&gt;</i>}
+                  {item.href && <i><FaChevronRight color="#a8a8a8" /></i>}
                 </>
               )
 
@@ -894,6 +900,7 @@ function App() {
   const [screen, setScreen] = useState('home')
   const [publicCard, setPublicCard] = useState(null)
   const [loginError, setLoginError] = useState('')
+  const [cardToDelete, setCardToDelete] = useState(null)
   const [cards, setCards] = useState(() => {
     const savedCards = localStorage.getItem(storageKey)
     return savedCards ? JSON.parse(savedCards) : []
@@ -1006,6 +1013,7 @@ function App() {
 
   if (screen === 'dashboard') {
     return (
+      <>
       <AdminDashboard
         cards={cards}
         onLogout={goHome}
@@ -1018,7 +1026,11 @@ function App() {
             : card
 
           setCards((current) => [savedCard, ...current])
+          if (!appConfig.useApi) localStorage.setItem(storageKey, JSON.stringify([savedCard, ...cards]))
           return savedCard
+        }}
+        onDelete={(card) => {
+          setCardToDelete(card)
         }}
         onView={(card) => {
           const publicCard = appConfig.useApi ? card : getShareableCard(card)
@@ -1029,6 +1041,34 @@ function App() {
           setScreen('public')
         }}
       />
+      {cardToDelete && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Delete Card</h3>
+            <p>Are you sure you want to delete {cardToDelete.name}'s visiting card?</p>
+            <div className="modal-actions">
+              <button className="secondary-button" onClick={() => setCardToDelete(null)}>Cancel</button>
+              <button className="danger-button" onClick={async () => {
+                const card = cardToDelete;
+                setCardToDelete(null);
+                try {
+                  if (appConfig.useApi) {
+                    await apiRequest(`/api/cards/${card.id}`, { method: 'DELETE' })
+                  }
+                  setCards((current) => {
+                    const next = current.filter((c) => c.id !== card.id)
+                    if (!appConfig.useApi) localStorage.setItem(storageKey, JSON.stringify(next))
+                    return next
+                  })
+                } catch (error) {
+                  alert(error.message || 'Failed to delete card.')
+                }
+              }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
     )
   }
 
