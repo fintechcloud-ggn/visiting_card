@@ -133,20 +133,44 @@ function getSocialLinks(card) {
   ].filter((item) => item.url)
 }
 
-function getDisplayDetails(card) {
+function ContactIcon({ name }) {
+  const icons = {
+    phone: (
+      <><rect x="7" y="2" width="10" height="20" rx="2" /><path d="M11 18h2" /></>
+    ),
+    whatsapp: (
+      <><path d="M4.5 19.5 6 15.7A8 8 0 1 1 9.1 18Z" /><path d="M9.3 8.4c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.7 1.6c.1.3 0 .5-.2.7l-.5.6a5.3 5.3 0 0 0 2.2 2.2l.6-.5c.2-.2.4-.3.7-.2l1.6.7c.3.1.4.3.4.6v.5c0 .3-.1.5-.4.7-.6.4-1.2.6-1.8.5-3.3-.5-5.8-3-6.3-6.3-.1-.6.1-1.2.5-1.8Z" /></>
+    ),
+    mail: (
+      <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></>
+    ),
+    link: (
+      <><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1" /></>
+    ),
+    pin: (
+      <><path d="M12 22s7-6.4 7-13A7 7 0 0 0 5 9c0 6.6 7 13 7 13Z" /><circle cx="12" cy="9" r="2.4" /></>
+    ),
+    company: (
+      <><path d="M4 21V5a2 2 0 0 1 2-2h8v18" /><path d="M14 8h4a2 2 0 0 1 2 2v11" /><path d="M8 7h2M8 11h2M8 15h2" /></>
+    ),
+  }
+
+  return (
+    <svg className="contact-icon" viewBox="0 0 24 24" aria-hidden="true">
+      {icons[name]}
+    </svg>
+  )
+}
+
+function getContactItems(card, whatsappNumber, websiteUrl) {
   return [
-    { label: 'Name', value: card.name },
-    { label: 'Mobile', value: card.mobile },
-    { label: 'Designation', value: card.designation },
-    { label: 'Company', value: card.companyName },
-    { label: 'Office address', value: card.officeAddress },
-    { label: 'Email', value: card.email },
-    { label: 'Website', value: card.website },
-    { label: 'LinkedIn', value: card.linkedin },
-    { label: 'YouTube', value: card.youtube },
-    { label: 'Facebook', value: card.facebook },
-    { label: 'Instagram', value: card.instagram },
-  ].filter((detail) => detail.value)
+    card.mobile && { key: 'phone', icon: 'phone', label: card.mobile, href: `tel:${card.mobile}` },
+    whatsappNumber && { key: 'whatsapp', icon: 'whatsapp', label: 'WhatsApp Chat', href: `https://wa.me/${whatsappNumber}` },
+    card.email && { key: 'email', icon: 'mail', label: card.email, href: `mailto:${card.email}` },
+    websiteUrl && { key: 'website', icon: 'link', label: card.website, href: websiteUrl },
+    card.officeAddress && { key: 'address', icon: 'pin', label: card.officeAddress, href: `https://maps.google.com/?q=${encodeURIComponent(card.officeAddress)}` },
+    card.companyName && { key: 'company', icon: 'company', label: card.companyName, href: null },
+  ].filter(Boolean)
 }
 
 function getCompanyTheme(companyName = '') {
@@ -455,6 +479,58 @@ function CardPreview({ card, showQr = false }) {
   )
 }
 
+function ShareCardModal({
+  card,
+  publicUrl,
+  encodedShareText,
+  encodedShareSubject,
+  onClose,
+  onCopy,
+  onNativeShare,
+}) {
+  const qrSrc = useQrCode(publicUrl)
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicUrl)}`
+  const xUrl = `https://twitter.com/intent/tweet?text=${encodedShareText}`
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`
+
+  return (
+    <div className="share-modal-backdrop" role="presentation">
+      <section className="share-modal" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+        <div className="share-modal-header">
+          <h2 id="share-modal-title"><span aria-hidden="true">↗</span> Share My Digital Card</h2>
+          <button className="share-modal-close" type="button" onClick={onClose} aria-label="Close share options">
+            x
+          </button>
+        </div>
+
+        <div className="share-modal-qr">
+          {qrSrc ? <img src={qrSrc} alt="Digital card QR code" /> : <QrImage value={publicUrl} />}
+        </div>
+
+        {qrSrc && (
+          <a className="share-download" href={qrSrc} download={`${card.name || 'digital-card'}-qr.png`}>
+            Download My QR Code
+          </a>
+        )}
+
+        <div className="share-social-grid" aria-label="Share destinations">
+          <a className="share-social whatsapp" href={`https://wa.me/?text=${encodedShareText}`} aria-label="Share on WhatsApp">☘</a>
+          <a className="share-social facebook" href={facebookUrl} aria-label="Share on Facebook">f</a>
+          <a className="share-social x" href={xUrl} aria-label="Share on X">X</a>
+          <a className="share-social linkedin" href={linkedInUrl} aria-label="Share on LinkedIn">in</a>
+          <a className="share-social gmail" href={`mailto:?subject=${encodedShareSubject}&body=${encodedShareText}`} aria-label="Share by email">M</a>
+          <button className="share-social native" type="button" onClick={onNativeShare} aria-label="More share options">↗</button>
+        </div>
+
+        <div className="share-link-box">
+          <span>{publicUrl}</span>
+          <button type="button" onClick={onCopy} aria-label="Copy card link">▢</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function AdminDashboard({ cards, onCreate, onLogout, onView }) {
   const [card, setCard] = useState(emptyCard)
   const [message, setMessage] = useState('')
@@ -639,7 +715,7 @@ function PublicCardPage({ card, onClose }) {
   const whatsappNumber = card.mobile?.replace(/\D/g, '') || ''
   const websiteUrl = formatUrl(card.website)
   const socialLinks = getSocialLinks(card)
-  const displayDetails = getDisplayDetails(card)
+  const contactItems = getContactItems(card, whatsappNumber, websiteUrl)
   const theme = getCompanyTheme(card.companyName)
 
   const shareText = `${card.name || 'Visiting card'}${card.designation ? ` - ${card.designation}` : ''}\n${publicUrl}`
@@ -678,20 +754,7 @@ function PublicCardPage({ card, onClose }) {
 
   async function shareCard() {
     setShareMessage('')
-    setIsShareOpen((current) => !current)
-
-    if (navigator.share && window.isSecureContext) {
-      try {
-        await navigator.share({
-          title: card.name || 'Visiting card',
-          text: card.designation ? `${card.name} - ${card.designation}` : card.name || 'Visiting card',
-          url: publicUrl,
-        })
-        setIsShareOpen(false)
-      } catch (error) {
-        if (error.name !== 'AbortError') setIsShareOpen(true)
-      }
-    }
+    setIsShareOpen(true)
   }
 
   return (
@@ -707,17 +770,9 @@ function PublicCardPage({ card, onClose }) {
       </header>
 
       <section className="tapmo-hero" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent, '--card-soft': theme.soft }}>
-        <div className="share-row">
-          <button type="button" onClick={shareCard}>Share My Card</button>
-        </div>
-        {isShareOpen && (
-          <div className="share-options" aria-label="Share options">
-            <button type="button" onClick={shareNative}>More</button>
-            <a href={`https://wa.me/?text=${encodedShareText}`}>WhatsApp</a>
-            <a href={`sms:&body=${encodedShareText}`}>SMS</a>
-            <a href={`mailto:?subject=${encodedShareSubject}&body=${encodedShareText}`}>Email</a>
-            <a href={`https://t.me/share/url?url=${encodeURIComponent(publicUrl)}&text=${encodeURIComponent(card.name || 'Visiting card')}`}>Telegram</a>
-            <button type="button" onClick={copyCardLink}>Copy Link</button>
+        {!isShareOpen && (
+          <div className="share-row">
+            <button type="button" onClick={shareCard}>Share My Card</button>
           </div>
         )}
         {shareMessage && <p className="share-status">{shareMessage}</p>}
@@ -726,14 +781,28 @@ function PublicCardPage({ card, onClose }) {
         </div>
       </section>
 
-      <section className="tapmo-actions">
-        <a href={vcardUrl} download={`${card.name || 'visiting-card'}.vcf`}>
-          Save Contact
-        </a>
-        <a className="primary" href={`mailto:${card.email || ''}?subject=Exchange Contact&body=Hi ${card.name},`}>
-          Exchange Contact
-        </a>
-      </section>
+      {!isShareOpen && (
+        <section className="tapmo-actions">
+          <a href={vcardUrl} download={`${card.name || 'visiting-card'}.vcf`}>
+            Save Contact
+          </a>
+          <a className="primary" href={`mailto:${card.email || ''}?subject=Exchange Contact&body=Hi ${card.name},`}>
+            Exchange Contact
+          </a>
+        </section>
+      )}
+
+      {isShareOpen && (
+        <ShareCardModal
+          card={card}
+          publicUrl={publicUrl}
+          encodedShareText={encodedShareText}
+          encodedShareSubject={encodedShareSubject}
+          onClose={() => setIsShareOpen(false)}
+          onCopy={copyCardLink}
+          onNativeShare={shareNative}
+        />
+      )}
 
       {socialLinks.length > 0 && (
         <section className="tapmo-section">
@@ -748,29 +817,28 @@ function PublicCardPage({ card, onClose }) {
         </section>
       )}
 
-      <section className="tapmo-section">
-        <h2>All card details</h2>
-        <div className="tapmo-detail-grid">
-          {displayDetails.map((detail) => (
-            <div className="tapmo-detail-row" key={detail.label}>
-              <span>{detail.label}</span>
-              <b>{detail.value}</b>
-            </div>
-          ))}
-        </div>
-      </section>
+      {contactItems.length > 0 && (
+        <section className="tapmo-section">
+          <h2>Contact info.</h2>
+          <div className="tapmo-contact-list">
+            {contactItems.map((item) => {
+              const content = (
+                <>
+                  <span className="contact-icon-wrap"><ContactIcon name={item.icon} /></span>
+                  <b>{item.label}</b>
+                  {item.href && <i>&gt;</i>}
+                </>
+              )
 
-      <section className="tapmo-section">
-        <h2>Quick actions</h2>
-        <div className="tapmo-list">
-          <a href={`tel:${card.mobile}`}><span className="line-icon">Phone</span><b>{card.mobile}</b><i>›</i></a>
-          {card.companyName && <a href="#company"><span className="line-icon">Co</span><b>{card.companyName}</b><i>›</i></a>}
-          {whatsappNumber && <a href={`https://wa.me/${whatsappNumber}`}><span className="line-icon">WA</span><b>WhatsApp Chat</b><i>›</i></a>}
-          {card.email && <a href={`mailto:${card.email}`}><span className="line-icon">Mail</span><b>{card.email}</b><i>›</i></a>}
-          {websiteUrl && <a href={websiteUrl}><span className="line-icon">Link</span><b>{card.website}</b><i>›</i></a>}
-          {card.officeAddress && <a href={`https://maps.google.com/?q=${encodeURIComponent(card.officeAddress)}`}><span className="line-icon">Pin</span><b>{card.officeAddress}</b><i>›</i></a>}
-        </div>
-      </section>
+              return item.href ? (
+                <a key={item.key} href={item.href}>{content}</a>
+              ) : (
+                <div className="tapmo-contact-static" key={item.key}>{content}</div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <footer className="tapmo-powered">
         <span>Powered by</span>
