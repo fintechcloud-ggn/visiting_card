@@ -2157,7 +2157,7 @@ input:focus {
 }
 
 .tapmo-page {
-  width: min(740px, 100%);
+  width: 100%;
   min-height: 100svh;
   margin: 0 auto;
   color: #20242b;
@@ -2181,7 +2181,7 @@ input:focus {
 .tapmo-topbar strong {
   justify-self: center;
   color: #050505;
-  font-size: 30px;
+  font-size: 20px;
 }
 
 .tapmo-round {
@@ -2203,7 +2203,7 @@ input:focus {
 }
 
 .tapmo-hero {
-  padding: 20px 18px 0;
+  padding: 0;
   background: linear-gradient(var(--card-bg, #020b42) 0 42%, #fff 42%);
 }
 
@@ -2272,7 +2272,7 @@ input:focus {
   grid-template-columns: 49% 1fr;
   overflow: hidden;
   min-height: 475px;
-  border-radius: 42px;
+  border-radius: 0;
   background: #fff;
   box-shadow: 0 26px 45px rgba(8, 17, 44, 0.16);
 }
@@ -2304,7 +2304,7 @@ input:focus {
   place-items: center;
   min-height: 475px;
   overflow: hidden;
-  border-radius: 42px 0 0 42px;
+  border-radius: 0;
   color: #fff;
   background: linear-gradient(155deg, #23354c 0%, #111827 55%, #416078 100%);
   font-size: 96px;
@@ -2328,14 +2328,14 @@ input:focus {
 .tapmo-info h1 {
   margin: 0;
   color: #050505;
-  font-size: clamp(26px, 4.3vw, 36px);
+  font-size: clamp(20px, 3.5vw, 28px);
   line-height: 1;
 }
 
 .tapmo-info p {
   margin: 0;
   color: #2c2c2c;
-  font-size: clamp(17px, 2.8vw, 23px);
+  font-size: clamp(14px, 2.5vw, 18px);
   line-height: 1.18;
 }
 
@@ -2363,12 +2363,12 @@ input:focus {
 .tapmo-actions a {
   display: grid;
   place-items: center;
-  min-height: 72px;
+  min-height: 52px;
   border: 2px solid #222;
   border-radius: 8px;
   color: #222;
   background: #fff;
-  font-size: clamp(22px, 4vw, 30px);
+  font-size: clamp(16px, 3vw, 20px);
   text-align: center;
   text-decoration: none;
 }
@@ -2384,9 +2384,9 @@ input:focus {
 }
 
 .tapmo-section h2 {
-  margin: 0 0 25px;
+  margin: 0 0 20px;
   color: #20242b;
-  font-size: clamp(26px, 4.2vw, 32px);
+  font-size: clamp(20px, 3.5vw, 24px);
   line-height: 1.1;
 }
 
@@ -2468,7 +2468,7 @@ input:focus {
 }
 
 .tapmo-contact-list b {
-  font-size: clamp(23px, 4.2vw, 31px);
+  font-size: clamp(16px, 3vw, 20px);
   line-height: 1.16;
   overflow-wrap: anywhere;
 }
@@ -2482,16 +2482,16 @@ input:focus {
 
 .tapmo-powered {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   place-items: center;
-  padding: 0 22px 52px;
+  padding: 0 22px 32px;
   color: #777;
-  font-size: 26px;
+  font-size: 16px;
 }
 
 .tapmo-powered strong {
   color: #111;
-  font-size: 31px;
+  font-size: 20px;
 }
 
 @media (max-width: 820px) {
