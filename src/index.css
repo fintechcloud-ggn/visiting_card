@@ -27,3 +27,8 @@ button,
 a {
   font: inherit;
 }
+
+button {
+  background-color: white !important;
+  color: black !important;
+}

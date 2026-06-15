@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FaChevronRight } from 'react-icons/fa'
+import { FaChevronRight, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaEnvelope, FaShare, FaCopy } from 'react-icons/fa'
+import { FaXTwitter } from 'react-icons/fa6'
 import QRCode from 'qrcode'
 import './App.css'
 
@@ -550,17 +551,17 @@ function ShareCardModal({
         )}
 
         <div className="share-social-grid" aria-label="Share destinations">
-          <a className="share-social whatsapp" href={`https://wa.me/?text=${encodedShareText}`} aria-label="Share on WhatsApp">☘</a>
-          <a className="share-social facebook" href={facebookUrl} aria-label="Share on Facebook">f</a>
-          <a className="share-social x" href={xUrl} aria-label="Share on X">X</a>
-          <a className="share-social linkedin" href={linkedInUrl} aria-label="Share on LinkedIn">in</a>
-          <a className="share-social gmail" href={`mailto:?subject=${encodedShareSubject}&body=${encodedShareText}`} aria-label="Share by email">M</a>
-          <button className="share-social native" type="button" onClick={onNativeShare} aria-label="More share options">↗</button>
+          <a className="share-social whatsapp" href={`https://wa.me/?text=${encodedShareText}`} aria-label="Share on WhatsApp"><FaWhatsapp /></a>
+          <a className="share-social facebook" href={facebookUrl} aria-label="Share on Facebook"><FaFacebookF /></a>
+          <a className="share-social x" href={xUrl} aria-label="Share on X"><FaXTwitter /></a>
+          <a className="share-social linkedin" href={linkedInUrl} aria-label="Share on LinkedIn"><FaLinkedinIn /></a>
+          <a className="share-social gmail" href={`mailto:?subject=${encodedShareSubject}&body=${encodedShareText}`} aria-label="Share by email"><FaEnvelope /></a>
+          <button className="share-social native" type="button" onClick={onNativeShare} aria-label="More share options"><FaShare /></button>
         </div>
 
         <div className="share-link-box">
           <span>{publicUrl}</span>
-          <button type="button" onClick={onCopy} aria-label="Copy card link">▢</button>
+          <button type="button" onClick={onCopy} aria-label="Copy card link"><FaCopy /></button>
         </div>
       </section>
     </div>
@@ -752,11 +753,6 @@ function PublicCardPage({ card, onClose }) {
   const [shareMessage, setShareMessage] = useState('')
   const [isShareOpen, setIsShareOpen] = useState(false)
   const publicUrl = useMemo(() => getPublicUrl(card), [card])
-  const vcardUrl = `data:text/vcard;charset=utf-8,${encodeURIComponent(getVcard(card))}`
-  const whatsappNumber = card.mobile?.replace(/\D/g, '') || ''
-  const websiteUrl = formatUrl(card.website)
-  const socialLinks = getSocialLinks(card)
-  const contactItems = getContactItems(card, whatsappNumber, websiteUrl)
   const theme = getCompanyTheme(card.companyName)
 
   const shareText = `${card.name || 'Visiting card'}${card.designation ? ` - ${card.designation}` : ''}\n${publicUrl}`
@@ -818,20 +814,9 @@ function PublicCardPage({ card, onClose }) {
         )}
         {shareMessage && <p className="share-status">{shareMessage}</p>}
         <div className="tapmo-card-set">
-          <PublicCardFront card={card} />
+          <CardPreview card={card} showQr={true} />
         </div>
       </section>
-
-      {!isShareOpen && (
-        <section className="tapmo-actions">
-          <a href={vcardUrl} download={`${card.name || 'visiting-card'}.vcf`}>
-            Save Contact
-          </a>
-          <a className="primary" href={`mailto:${card.email || ''}?subject=Exchange Contact&body=Hi ${card.name},`}>
-            Exchange Contact
-          </a>
-        </section>
-      )}
 
       {isShareOpen && (
         <ShareCardModal
@@ -843,49 +828,6 @@ function PublicCardPage({ card, onClose }) {
           onCopy={copyCardLink}
           onNativeShare={shareNative}
         />
-      )}
-
-      {socialLinks.length > 0 && (
-        <section className="tapmo-section">
-          <h2>Social networks</h2>
-          <div className="tapmo-socials">
-            {socialLinks.map((social) => (
-              <a 
-                key={social.key} 
-                className={social.className} 
-                href={formatUrl(social.url)} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                aria-label={social.key}
-              >
-                <SocialIcon name={social.icon} />
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {contactItems.length > 0 && (
-        <section className="tapmo-section">
-          <h2>Contact info.</h2>
-          <div className="tapmo-contact-list">
-            {contactItems.map((item) => {
-              const content = (
-                <>
-                  <span className="contact-icon-wrap"><ContactIcon name={item.icon} /></span>
-                  <b>{item.label}</b>
-                  {item.href && <i><FaChevronRight color="#a8a8a8" /></i>}
-                </>
-              )
-
-              return item.href ? (
-                <a key={item.key} href={item.href}>{content}</a>
-              ) : (
-                <div className="tapmo-contact-static" key={item.key}>{content}</div>
-              )
-            })}
-          </div>
-        </section>
       )}
 
       <footer className="tapmo-powered">
