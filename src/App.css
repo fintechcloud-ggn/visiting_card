@@ -4302,7 +4302,7 @@ input:focus {
 .theme-fintech-front .physical-preview-details {
   order: 1;
   position: static !important;
-  padding: 24% 6% 6% 4% !important;
+  padding: 16% 6% 6% 4% !important;
   align-items: flex-end;
   text-align: right;
 }
