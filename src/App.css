@@ -1441,6 +1441,12 @@ input:focus {
   gap: 8px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.flip-card-front-face {
+  z-index: 2;
+  transform: rotateY(0deg);
 }
 
 .flip-card-face > .physical-side-label {
@@ -1453,7 +1459,7 @@ input:focus {
 }
 
 .flip-card-back-face {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(0);
 }
 
 .flip-card-face > .physical-preview-card,
