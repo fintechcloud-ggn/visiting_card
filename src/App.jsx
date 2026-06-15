@@ -29,6 +29,7 @@ const emptyCard = {
   youtube: '',
   facebook: '',
   instagram: '',
+  theme: 'default',
 }
 
 function encodeCard(card) {
@@ -366,7 +367,7 @@ function getCompanyTheme(companyName = '') {
   }
 }
 
-function useQrCode(value) {
+function useQrCode(value, options = {}) {
   const [src, setSrc] = useState('')
 
   useEffect(() => {
@@ -376,8 +377,8 @@ function useQrCode(value) {
       width: 220,
       margin: 2,
       color: {
-        dark: '#020b42',
-        light: '#ffffff',
+        dark: options.dark || '#b1cddbff',
+        light: options.light || '#ffffff',
       },
     }).then((dataUrl) => {
       if (isActive) setSrc(dataUrl)
@@ -393,8 +394,8 @@ function useQrCode(value) {
   return src
 }
 
-function QrImage({ value }) {
-  const src = useQrCode(value)
+function QrImage({ value, darkColor, lightColor }) {
+  const src = useQrCode(value, { dark: darkColor, light: lightColor })
 
   return src ? <img className="qr-image" src={src} alt="Scan visiting card QR code" /> : null
 }
@@ -538,7 +539,14 @@ function LoginForm({ onSubmit, onBack, error }) {
   )
 }
 
-function CardBack({ card }) {
+function CardBack({ card, publicUrl }) {
+  if (card.theme === 'fintech') {
+    return (
+      <article className="physical-preview-card physical-preview-card-back theme-fintech">
+      </article>
+    )
+  }
+
   return (
     <article className="physical-preview-card physical-preview-card-back">
       <div className="physical-back-logo" aria-label={`${card.name || 'Card'} logo`}>
@@ -582,7 +590,10 @@ function CardBack({ card }) {
 
 function CardFront({ card, publicUrl, showQr = false }) {
   return (
-    <article className="physical-preview-card physical-preview-card-front">
+    <article className={`physical-preview-card physical-preview-card-front ${card.theme === 'fintech' ? 'theme-fintech-front' : ''}`}>
+      {card.theme === 'fintech' && (
+        <img src="/fintech-logo.png" className="fintech-front-logo" alt="Fintech Logo" />
+      )}
       <div className="physical-preview-photo">
         {card.imageUrl ? (
           <img src={formatUrl(card.imageUrl)} alt="" />
@@ -596,7 +607,11 @@ function CardFront({ card, publicUrl, showQr = false }) {
       <div className="physical-preview-details">
         {showQr && (
           <div className="physical-preview-qr">
-            <QrImage value={publicUrl} />
+            <QrImage 
+              value={publicUrl} 
+              darkColor={card.theme === 'fintech' ? '#000000ff' : undefined} 
+              lightColor={card.theme === 'fintech' ? '#00000000' : undefined} 
+            />
           </div>
         )}
         <div>
@@ -606,7 +621,6 @@ function CardFront({ card, publicUrl, showQr = false }) {
         </div>
         <div className="physical-phone">{card.mobile || '+91 XXXXX XXXXX'}</div>
         <div className="physical-address">{card.officeAddress || 'Office address'}</div>
-        <div className="physical-chip">{getInitials(card.name)}</div>
       </div>
     </article>
   )
@@ -622,7 +636,6 @@ function PublicCardFront({ card }) {
         <h1>{card.name}</h1>
         <p>{card.designation}</p>
         {card.companyName && <span className="tapmo-company">{card.companyName}</span>}
-        <div className="tapmo-logo">{getInitials(card.name)}</div>
       </div>
     </article>
   )
@@ -669,7 +682,7 @@ function CardPreview({ card, showQr = false }) {
 
   return (
     <div className="physical-card-set" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent }}>
-      <FlipCard front={<CardFront card={card} publicUrl={publicUrl} showQr={showQr} />} back={<CardBack card={card} />} />
+      <FlipCard front={<CardFront card={card} publicUrl={publicUrl} showQr={showQr} />} back={<CardBack card={card} publicUrl={publicUrl} />} />
     </div>
   )
 }
@@ -733,10 +746,14 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
   const imageInputRef = useRef(null)
 
   function updateField(event) {
-    setCard((current) => ({
-      ...current,
-      [event.target.name]: event.target.value,
-    }))
+    const { name, value } = event.target
+    setCard((current) => {
+      const updates = { [name]: value }
+      if (name === 'theme' && value === 'fintech') {
+        updates.officeAddress = 'Corporate Office\nFintech Cloud Pvt. Ltd.\nPlot No. 296, DLF Phase IV ,\nUDYOG VIHAR, Gurugram,\nHaryana - 122015'
+      }
+      return { ...current, ...updates }
+    })
   }
 
   function uploadImage(event) {
@@ -810,6 +827,13 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
       <section className="builder-grid">
         <form className="builder-form" noValidate>
           <label>
+            Theme
+            <select name="theme" value={card.theme || 'default'} onChange={updateField}>
+              <option value="default">Default</option>
+              <option value="fintech">Fintech Cloud</option>
+            </select>
+          </label>
+          <label>
             Full Name
             <input name="name" value={card.name} onChange={updateField} placeholder="Enter client name" />
           </label>
@@ -827,7 +851,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
           </label>
           <label>
             Office Address
-            <input name="officeAddress" value={card.officeAddress} onChange={updateField} placeholder="Office address" />
+            <textarea name="officeAddress" value={card.officeAddress} onChange={updateField} placeholder="Office address" rows={4} />
           </label>
           <label>
             Email
