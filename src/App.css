@@ -4297,6 +4297,7 @@ input:focus {
   width: 18%;
   z-index: 10;
   object-fit: contain;
+  mix-blend-mode: multiply;
 }
 
 .theme-fintech-front .physical-preview-details {
