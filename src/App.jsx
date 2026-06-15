@@ -742,8 +742,21 @@ function ShareCardModal({
 function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
   const [card, setCard] = useState(emptyCard)
   const [message, setMessage] = useState('')
+  const [cardToPrint, setCardToPrint] = useState(null)
   const cardsSectionRef = useRef(null)
   const imageInputRef = useRef(null)
+
+  useEffect(() => {
+    if (cardToPrint) {
+      const timer = setTimeout(() => window.print(), 500)
+      const handleAfterPrint = () => setCardToPrint(null)
+      window.addEventListener('afterprint', handleAfterPrint)
+      return () => {
+        clearTimeout(timer)
+        window.removeEventListener('afterprint', handleAfterPrint)
+      }
+    }
+  }, [cardToPrint])
 
   function updateField(event) {
     const { name, value } = event.target
@@ -918,6 +931,9 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
                   <button className="secondary-button" onClick={() => onView(savedCard)}>
                     Open
                   </button>
+                  <button className="secondary-button" onClick={() => setCardToPrint(savedCard)}>
+                    Print
+                  </button>
                   <button className="danger-button" onClick={() => onDelete(savedCard)}>
                     Delete
                   </button>
@@ -927,6 +943,16 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
           )}
         </div>
       </section>
+
+      {cardToPrint && (
+        <div className="print-only">
+          <div className="print-page">
+            <CardFront card={cardToPrint} publicUrl={getPublicUrl(cardToPrint)} showQr />
+            <div className="print-gap"></div>
+            <CardBack card={cardToPrint} publicUrl={getPublicUrl(cardToPrint)} />
+          </div>
+        </div>
+      )}
     </main>
   )
 }
