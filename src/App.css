@@ -4283,9 +4283,9 @@ input:focus {
 
 .fintech-front-logo {
   position: absolute;
-  top: 24px;
-  left: 16px;
-  width: 100px;
+  top: 6%;
+  left: 6%;
+  width: 24%;
   z-index: 10;
   object-fit: contain;
 }
@@ -4293,15 +4293,16 @@ input:focus {
 .theme-fintech-front .physical-preview-details {
   order: 1;
   position: static !important;
-  padding: 80px 32px 24px 14px !important;
+  padding: 24% 6% 6% 4% !important;
   align-items: flex-end;
   text-align: right;
 }
 
 .theme-fintech-front .physical-preview-qr {
   position: absolute;
-  bottom: 24px;
-  left: 16px;
+  bottom: 8%;
+  left: 6%;
+  width: 26%;
   margin: 0;
   padding: 0;
   background: transparent;
@@ -4309,8 +4310,9 @@ input:focus {
 }
 
 .theme-fintech-front .physical-preview-qr .qr-image {
-  width: 120px !important;
-  height: 120px !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1;
 }
 
 .physical-address {
@@ -4318,8 +4320,8 @@ input:focus {
 }
 
 .theme-fintech-front .physical-address {
-  font-size: 14px !important;
+  font-size: clamp(9px, 2.5cqw, 14px) !important;
   line-height: 1.5 !important;
-  margin-top: 10px;
+  margin-top: 5%;
 }
 
