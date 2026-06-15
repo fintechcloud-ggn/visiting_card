@@ -4382,8 +4382,9 @@ input:focus {
   }
 
   .print-only .physical-preview-card {
-    width: 14cm !important;
+    width: 3.5in !important; /* Standard visiting card width (8.89 cm) */
     height: auto !important;
+    aspect-ratio: 1.72 !important; /* Preserves our design aspect ratio */
     box-shadow: none !important;
     border: 1px solid #ccc !important;
     margin: 0 auto !important;
