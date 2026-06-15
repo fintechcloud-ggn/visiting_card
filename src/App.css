@@ -4294,7 +4294,7 @@ input:focus {
   position: absolute;
   top: 6%;
   left: 6%;
-  width: 24%;
+  width: 18%;
   z-index: 10;
   object-fit: contain;
 }
