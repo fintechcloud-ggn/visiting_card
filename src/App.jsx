@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FaChevronRight, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaEnvelope, FaShare, FaCopy } from 'react-icons/fa'
+import { FaChevronRight, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaEnvelope, FaShare, FaCopy, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import QRCode from 'qrcode'
 import './App.css'
 
 const storageKey = 'visiting-cards'
+const uiStateKey = 'visiting-cards-ui-state'
 
 const appConfig = {
   brandName: import.meta.env.VITE_BRAND_NAME || 'nextgen',
@@ -52,6 +53,140 @@ function getShareableCard(card) {
   }
 }
 
+function normalizeCard(card) {
+  if (!card || typeof card !== 'object') return null
+
+  return {
+    ...card,
+    id: card.id || '',
+  }
+}
+
+function dedupeCards(cards) {
+  const merged = []
+  const seenIds = new Set()
+
+  for (const card of cards) {
+    const normalized = normalizeCard(card)
+    if (!normalized?.id || seenIds.has(normalized.id)) continue
+    seenIds.add(normalized.id)
+    merged.push(normalized)
+  }
+
+  return merged
+}
+
+function loadCardStore() {
+  if (typeof localStorage === 'undefined') {
+    return { cards: [], deletedIds: [] }
+  }
+
+  try {
+    const saved = localStorage.getItem(storageKey)
+    if (!saved) {
+      return { cards: [], deletedIds: [] }
+    }
+
+    const parsed = JSON.parse(saved)
+    if (Array.isArray(parsed)) {
+      return { cards: dedupeCards(parsed), deletedIds: [] }
+    }
+
+    if (parsed && typeof parsed === 'object') {
+      return {
+        cards: dedupeCards(Array.isArray(parsed.cards) ? parsed.cards : []),
+        deletedIds: Array.isArray(parsed.deletedIds) ? [...new Set(parsed.deletedIds.filter(Boolean))] : [],
+      }
+    }
+  } catch {
+    return { cards: [], deletedIds: [] }
+  }
+
+  return { cards: [], deletedIds: [] }
+}
+
+function saveCardStore(store) {
+  if (typeof localStorage === 'undefined') return
+  localStorage.setItem(storageKey, JSON.stringify(store))
+}
+
+function loadUiState() {
+  if (typeof sessionStorage === 'undefined') {
+    return { screen: 'home', isAuthenticated: false }
+  }
+
+  try {
+    const saved = sessionStorage.getItem(uiStateKey)
+    if (!saved) return { screen: 'home', isAuthenticated: false }
+
+    const parsed = JSON.parse(saved)
+    return {
+      screen: parsed.screen || 'home',
+      isAuthenticated: Boolean(parsed.isAuthenticated),
+    }
+  } catch {
+    return { screen: 'home', isAuthenticated: false }
+  }
+}
+
+function saveUiState(state) {
+  if (typeof sessionStorage === 'undefined') return
+  sessionStorage.setItem(uiStateKey, JSON.stringify(state))
+}
+
+function clearUiState() {
+  if (typeof sessionStorage === 'undefined') return
+  sessionStorage.removeItem(uiStateKey)
+}
+
+function getVisibleCards(store) {
+  const deletedIds = new Set(store.deletedIds || [])
+  return (store.cards || []).filter((card) => card?.id && !deletedIds.has(card.id))
+}
+
+function mergeCardRecord(remoteCard, localCard) {
+  const merged = {
+    ...(remoteCard || {}),
+    ...(localCard || {}),
+  }
+
+  for (const [key, value] of Object.entries(remoteCard || {})) {
+    if ((merged[key] === '' || merged[key] == null) && value !== '' && value != null) {
+      merged[key] = value
+    }
+  }
+
+  return merged
+}
+
+function mergeCardLists(remoteCards, localCards, deletedIds = []) {
+  const deletedSet = new Set(deletedIds)
+  const byId = new Map()
+  const order = []
+
+  for (const card of remoteCards || []) {
+    const normalized = normalizeCard(card)
+    if (!normalized?.id || deletedSet.has(normalized.id) || byId.has(normalized.id)) continue
+    order.push(normalized.id)
+    byId.set(normalized.id, normalized)
+  }
+
+  for (const card of localCards || []) {
+    const normalized = normalizeCard(card)
+    if (!normalized?.id || deletedSet.has(normalized.id)) continue
+
+    if (byId.has(normalized.id)) {
+      byId.set(normalized.id, mergeCardRecord(byId.get(normalized.id), normalized))
+      continue
+    }
+
+    order.push(normalized.id)
+    byId.set(normalized.id, normalized)
+  }
+
+  return order.map((id) => byId.get(id)).filter(Boolean)
+}
+
 function getAppBaseUrl() {
   const baseUrl = appConfig.publicBaseUrl || `${window.location.origin}${window.location.pathname.replace(/\/$/, '')}`
   return baseUrl
@@ -65,6 +200,13 @@ function getPublicUrl(card) {
   }
 
   return `${baseUrl}/#/card/${encodeCard(getShareableCard(card))}`
+}
+
+function hydrateCardImage(card, cards) {
+  if (!card?.id || card.imageUrl) return card
+
+  const matchingCard = cards.find((item) => item.id === card.id && item.imageUrl)
+  return matchingCard ? { ...card, imageUrl: matchingCard.imageUrl } : card
 }
 
 async function apiRequest(path, options = {}) {
@@ -328,6 +470,8 @@ function AdminHome({ onLogin }) {
 }
 
 function LoginForm({ onSubmit, onBack, error }) {
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <main className="admin-login-page">
       <section className="admin-login-stage">
@@ -355,8 +499,22 @@ function LoginForm({ onSubmit, onBack, error }) {
         <label>
           <input name="username" type="email" placeholder="Username" required />
         </label>
-        <label>
-          <input name="password" type="password" placeholder="Password" required />
+        <label className="password-field">
+          <input
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            required
+          />
+          <button
+            className="password-toggle"
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
         </label>
         {error && <p className="login-error">{error}</p>}
         <a className="forgot-link" href="#forgot">
@@ -383,9 +541,9 @@ function LoginForm({ onSubmit, onBack, error }) {
 function CardBack({ card }) {
   return (
     <article className="physical-preview-card physical-preview-card-back">
-      <div className="physical-back-logo" aria-label="VC stands for Visiting Card">
-        <strong>VC</strong>
-        <span>VISITING CARD</span>
+      <div className="physical-back-logo" aria-label={`${card.name || 'Card'} logo`}>
+        <strong>{getInitials(card.name)}</strong>
+        <span>{card.name || 'VISITING CARD'}</span>
       </div>
 
       <div className="physical-back-title">
@@ -839,36 +997,89 @@ function PublicCardPage({ card, onClose }) {
 }
 
 function App() {
-  const [screen, setScreen] = useState('home')
+  const initialUiState = loadUiState()
+  const [screen, setScreen] = useState(() => initialUiState.screen || 'home')
+  const [isAuthenticated, setIsAuthenticated] = useState(() => initialUiState.isAuthenticated)
   const [publicCard, setPublicCard] = useState(null)
   const [loginError, setLoginError] = useState('')
   const [cardToDelete, setCardToDelete] = useState(null)
-  const [cards, setCards] = useState(() => {
-    const savedCards = localStorage.getItem(storageKey)
-    return savedCards ? JSON.parse(savedCards) : []
-  })
+  const [cardStore, setCardStore] = useState(() => loadCardStore())
+  const cards = useMemo(() => getVisibleCards(cardStore), [cardStore])
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(cards))
-  }, [cards])
+    saveCardStore(cardStore)
+  }, [cardStore])
 
   useEffect(() => {
-    if (!appConfig.useApi) return
+    if (screen === 'public' || screen === 'dashboard' || screen === 'login') {
+      saveUiState({ screen, isAuthenticated })
+      return
+    }
+
+    clearUiState()
+  }, [screen, isAuthenticated])
+
+  useEffect(() => {
+    if (!appConfig.useApi || screen === 'home' || screen === 'login') return
 
     let isActive = true
 
-    apiRequest('/api/cards')
-      .then((databaseCards) => {
-        if (isActive) setCards(databaseCards)
-      })
-      .catch(() => {
+    async function syncCards() {
+      const localStore = loadCardStore()
+
+      try {
+        const databaseCards = await apiRequest('/api/cards')
+        const mergedCards = mergeCardLists(databaseCards, localStore.cards, localStore.deletedIds)
+        if (isActive) {
+          setCardStore({ cards: mergedCards, deletedIds: [...localStore.deletedIds] })
+        }
+
+        const pendingDeletedIds = new Set(localStore.deletedIds)
+        const syncedCards = []
+
+        for (const card of mergedCards) {
+          try {
+            const savedCard = await apiRequest('/api/cards', {
+              method: 'POST',
+              body: JSON.stringify(card),
+            })
+            syncedCards.push(savedCard)
+          } catch (error) {
+            console.warn(`Failed to sync card ${card.id}:`, error.message)
+            syncedCards.push(card)
+          }
+        }
+
+        for (const deletedId of pendingDeletedIds) {
+          try {
+            await apiRequest(`/api/cards/${encodeURIComponent(deletedId)}`, { method: 'DELETE' })
+            pendingDeletedIds.delete(deletedId)
+          } catch (error) {
+            if (!/not found/i.test(error.message || '')) {
+              console.warn(`Failed to sync delete for ${deletedId}:`, error.message)
+            } else {
+              pendingDeletedIds.delete(deletedId)
+            }
+          }
+        }
+
+        const refreshedRemoteCards = await apiRequest('/api/cards').catch(() => syncedCards)
+        const finalCards = mergeCardLists(refreshedRemoteCards, syncedCards, [])
+
+        if (isActive) {
+          setCardStore({ cards: finalCards, deletedIds: [...pendingDeletedIds] })
+        }
+      } catch {
         // Keep the localStorage fallback when the API is not running.
-      })
+      }
+    }
+
+    syncCards()
 
     return () => {
       isActive = false
     }
-  }, [])
+  }, [screen])
 
   useEffect(() => {
     let isActive = true
@@ -891,8 +1102,9 @@ function App() {
       const cardMatch = window.location.hash.match(/^#\/card\/(.+)$/)
       const card = cardMatch ? decodeCard(cardMatch[1]) : null
       if (isActive) {
-        setPublicCard(card)
-        if (card) setScreen('public')
+        const hydratedCard = hydrateCardImage(card, cards)
+        setPublicCard(hydratedCard)
+        if (hydratedCard) setScreen('public')
       }
     }
 
@@ -902,11 +1114,12 @@ function App() {
       isActive = false
       window.removeEventListener('hashchange', syncHashCard)
     }
-  }, [])
+  }, [cards])
 
   function goHome() {
     window.history.replaceState(null, '', window.location.pathname)
     setPublicCard(null)
+    setIsAuthenticated(false)
     setScreen('home')
   }
 
@@ -923,6 +1136,7 @@ function App() {
 
           if (username === appConfig.adminUsername && password === appConfig.adminPassword) {
             setLoginError('')
+            setIsAuthenticated(true)
             setScreen('dashboard')
             return
           }
@@ -938,6 +1152,7 @@ function App() {
               body: JSON.stringify({ username, password }),
             })
             setLoginError('')
+            setIsAuthenticated(true)
             setScreen('dashboard')
           } catch {
             if (username !== appConfig.adminUsername || password !== appConfig.adminPassword) {
@@ -946,6 +1161,7 @@ function App() {
             }
 
             setLoginError('')
+            setIsAuthenticated(true)
             setScreen('dashboard')
           }
         }}
@@ -954,32 +1170,46 @@ function App() {
   }
 
   if (screen === 'dashboard') {
+    if (!isAuthenticated) {
+      return <LoginForm onBack={goHome} error={loginError} onSubmit={() => {}} />
+    }
+
     return (
       <>
       <AdminDashboard
         cards={cards}
-        onLogout={goHome}
+        onLogout={() => {
+          clearUiState()
+          goHome()
+        }}
         onCreate={async (card) => {
-          const savedCard = appConfig.useApi
+          const nextCard = appConfig.useApi
             ? await apiRequest('/api/cards', {
                 method: 'POST',
                 body: JSON.stringify(card),
-              })
+              }).catch(() => card)
             : card
 
-          setCards((current) => [savedCard, ...current])
-          if (!appConfig.useApi) localStorage.setItem(storageKey, JSON.stringify([savedCard, ...cards]))
-          return savedCard
+          setCardStore((current) => {
+            const remainingCards = (current.cards || []).filter((item) => item.id !== nextCard.id)
+            const remainingDeletedIds = (current.deletedIds || []).filter((id) => id !== nextCard.id)
+            return {
+              cards: [nextCard, ...remainingCards],
+              deletedIds: remainingDeletedIds,
+            }
+          })
+
+          return nextCard
         }}
         onDelete={(card) => {
           setCardToDelete(card)
         }}
         onView={(card) => {
-          const publicCard = appConfig.useApi ? card : getShareableCard(card)
+          const publicCard = card
           setPublicCard(publicCard)
           window.location.hash = appConfig.useApi && card.id
             ? `/card-id/${encodeURIComponent(card.id)}`
-            : `/card/${encodeCard(publicCard)}`
+            : `/card/${encodeCard(getShareableCard(publicCard))}`
           setScreen('public')
         }}
       />
@@ -994,14 +1224,24 @@ function App() {
                 const card = cardToDelete;
                 setCardToDelete(null);
                 try {
-                  if (appConfig.useApi) {
-                    await apiRequest(`/api/cards/${card.id}`, { method: 'DELETE' })
-                  }
-                  setCards((current) => {
-                    const next = current.filter((c) => c.id !== card.id)
-                    if (!appConfig.useApi) localStorage.setItem(storageKey, JSON.stringify(next))
-                    return next
+                  setCardStore((current) => {
+                    const nextCards = (current.cards || []).filter((c) => c.id !== card.id)
+                    const nextDeletedIds = [...new Set([...(current.deletedIds || []), card.id])]
+                    return {
+                      cards: nextCards,
+                      deletedIds: appConfig.useApi ? nextDeletedIds : [],
+                    }
                   })
+
+                  if (appConfig.useApi) {
+                    await apiRequest(`/api/cards/${card.id}`, { method: 'DELETE' }).catch((error) => {
+                      if (!/not found/i.test(error.message || '')) throw error
+                    })
+                    setCardStore((current) => ({
+                      cards: current.cards || [],
+                      deletedIds: (current.deletedIds || []).filter((id) => id !== card.id),
+                    }))
+                  }
                 } catch (error) {
                   alert(error.message || 'Failed to delete card.')
                 }
@@ -1021,7 +1261,7 @@ function App() {
         onClose={() => {
           window.history.replaceState(null, '', window.location.pathname)
           setPublicCard(null)
-          setScreen('dashboard')
+          setScreen(isAuthenticated ? 'dashboard' : 'home')
         }}
       />
     )

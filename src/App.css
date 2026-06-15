@@ -887,13 +887,48 @@
   display: block;
 }
 
+.admin-login-stage .password-field {
+  position: relative;
+}
+
 .admin-login-stage .login-card input {
+  width: 100%;
   min-height: 48px;
   border-color: #d8dce4;
   border-radius: 8px;
   padding: 0 16px;
   font-size: 14px;
   font-weight: 700;
+}
+
+.admin-login-stage .password-field input {
+  padding-right: 56px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  color: #6b7280;
+  background: transparent;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: #111827;
+  background: rgba(17, 24, 39, 0.06);
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
 }
 
 .forgot-link {
@@ -1780,9 +1815,9 @@ input:focus {
 .physical-back-logo {
   display: grid;
   place-items: center;
-  width: clamp(58px, 10vw, 84px);
-  aspect-ratio: 1;
-  padding: 6px;
+  width: clamp(88px, 14vw, 122px);
+  min-height: clamp(88px, 14vw, 122px);
+  padding: 8px 10px 9px;
   color: var(--card-bg, #071527);
   background: #f8fbff;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
@@ -1790,18 +1825,22 @@ input:focus {
 
 .physical-back-logo strong {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(28px, 5.4vw, 48px);
+  font-size: clamp(30px, 6vw, 52px);
   font-weight: 400;
-  line-height: 0.88;
+  line-height: 0.82;
   letter-spacing: 0;
 }
 
 .physical-back-logo span {
-  margin-top: 2px;
+  margin-top: 4px;
   color: var(--card-bg, #071527);
-  font-size: clamp(5px, 0.8vw, 7px);
-  font-weight: 900;
-  letter-spacing: 0;
+  font-size: clamp(7px, 0.95vw, 10px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .physical-back-title {
