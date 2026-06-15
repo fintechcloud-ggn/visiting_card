@@ -4292,12 +4292,13 @@ input:focus {
 
 .fintech-front-logo {
   position: absolute;
-  top: 6%;
-  left: 3%;
+  top: 8%;
+  left: 6%;
   width: 18%;
   z-index: 10;
   object-fit: contain;
   mix-blend-mode: multiply;
+  filter: brightness(1.05) contrast(1.1);
 }
 
 .theme-fintech-front .physical-preview-details {
