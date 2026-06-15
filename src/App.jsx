@@ -589,20 +589,17 @@ function CardBack({ card, publicUrl }) {
 }
 
 function CardFront({ card, publicUrl, showQr = false }) {
+  const hasPhoto = !!card.imageUrl;
   return (
-    <article className={`physical-preview-card physical-preview-card-front ${card.theme === 'fintech' ? 'theme-fintech-front' : ''}`}>
+    <article className={`physical-preview-card physical-preview-card-front ${card.theme === 'fintech' ? 'theme-fintech-front' : ''} ${!hasPhoto ? 'no-photo' : ''}`}>
       {card.theme === 'fintech' && (
         <img src="/fintech-logo.png" className="fintech-front-logo" alt="Fintech Logo" />
       )}
-      <div className="physical-preview-photo">
-        {card.imageUrl ? (
+      {hasPhoto && (
+        <div className="physical-preview-photo">
           <img src={formatUrl(card.imageUrl)} alt="" />
-        ) : (
-          <div className="ai-portrait" aria-label="AI generated portrait placeholder">
-            <span>{getInitials(card.name)[0]}</span>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="physical-preview-details">
         {showQr && (
@@ -627,11 +624,14 @@ function CardFront({ card, publicUrl, showQr = false }) {
 }
 
 function PublicCardFront({ card }) {
+  const hasPhoto = !!card.imageUrl;
   return (
-    <article className="tapmo-card">
-      <div className="tapmo-photo">
-        {card.imageUrl ? <img src={formatUrl(card.imageUrl)} alt={card.name} /> : <span>{getInitials(card.name)[0]}</span>}
-      </div>
+    <article className={`tapmo-card ${!hasPhoto ? 'no-photo' : ''}`}>
+      {hasPhoto && (
+        <div className="tapmo-photo">
+          <img src={formatUrl(card.imageUrl)} alt={card.name} />
+        </div>
+      )}
       <div className="tapmo-info">
         <h1>{card.name}</h1>
         <p>{card.designation}</p>

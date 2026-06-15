@@ -1493,6 +1493,11 @@ input:focus {
   letter-spacing: 0;
 }
 
+.tapmo-card.no-photo {
+  grid-template-columns: 1fr;
+  text-align: center;
+}
+
 .physical-preview-card {
   position: relative;
   display: grid;
@@ -1507,6 +1512,10 @@ input:focus {
     radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.14), transparent 22%),
     linear-gradient(135deg, var(--card-bg, #091128), #020617 72%);
   box-shadow: 0 26px 52px rgba(3, 10, 30, 0.22);
+}
+
+.physical-preview-card.no-photo {
+  grid-template-columns: 1fr !important;
 }
 
 .physical-preview-card::after {
