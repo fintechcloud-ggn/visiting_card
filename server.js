@@ -86,7 +86,7 @@ function rowToCard(row) {
     facebook: row.facebook_url || '',
     instagram: row.instagram_url || '',
     qrCode: row.qr_code || '',
-    theme: row.card_theme || 'default',
+    theme: row.card_theme || 'classic',
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
   }
 }
@@ -290,7 +290,7 @@ app.post('/api/cards', async (request, response) => {
         cardToSave.instagram || null,
         '',
         qrCodeUrl,
-        cardToSave.theme || 'default',
+        cardToSave.theme || 'classic',
         cardSlug,
         new Date(cardToSave.createdAt || Date.now()),
       ],

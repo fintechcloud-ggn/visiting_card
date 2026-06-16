@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FaChevronRight, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaEnvelope, FaShare, FaCopy, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaChevronDown, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaEnvelope, FaShare, FaCopy, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import QRCode from 'qrcode'
 import './App.css'
@@ -29,8 +29,115 @@ const emptyCard = {
   youtube: '',
   facebook: '',
   instagram: '',
-  theme: 'default',
+  theme: 'classic',
 }
+
+const CARD_THEMES = {
+  fintech: {
+    label: 'Fintech',
+    className: 'theme-fintech',
+    bg: '#ffffff',
+    accent: '#000000',
+    soft: '#f4efe6',
+    ink: '#000000',
+    qrDark: '#000000',
+    qrLight: '#ffffff',
+  },
+  classic: {
+    label: 'Classic Ivory',
+    className: 'theme-classic',
+    bg: '#f1e7d6',
+    accent: '#7f1d2d',
+    soft: '#fbf4e8',
+    ink: '#231815',
+    qrDark: '#231815',
+    qrLight: '#ffffff',
+  },
+  tech: {
+    label: 'Midnight Tech',
+    className: 'theme-tech',
+    bg: '#102b4d',
+    accent: '#93c8ff',
+    soft: '#d6e8fb',
+    ink: '#f7fbff',
+    qrDark: '#f7fbff',
+    qrLight: '#102b4d',
+  },
+  royal: {
+    label: 'Royal Gold',
+    className: 'theme-royal',
+    bg: '#112649',
+    accent: '#d6b06a',
+    soft: '#f7ecc9',
+    ink: '#fff8e8',
+    qrDark: '#fff8e8',
+    qrLight: '#112649',
+  },
+  wood: {
+    label: 'Wood Luxe',
+    className: 'theme-wood',
+    bg: '#5a3a2a',
+    accent: '#f3e8db',
+    soft: '#f6efe6',
+    ink: '#fffaf4',
+    qrDark: '#2f1f17',
+    qrLight: '#f6efe6',
+  },
+  paper: {
+    label: 'Paper Classic',
+    className: 'theme-paper',
+    bg: '#f2eadb',
+    accent: '#7d1525',
+    soft: '#fcf8ef',
+    ink: '#151515',
+    qrDark: '#151515',
+    qrLight: '#ffffff',
+  },
+  circuit: {
+    label: 'Circuit Navy',
+    className: 'theme-circuit',
+    bg: '#17385f',
+    accent: '#8ad0ff',
+    soft: '#d8ebfb',
+    ink: '#f7fbff',
+    qrDark: '#f7fbff',
+    qrLight: '#17385f',
+  },
+  marble: {
+    label: 'Marble Leaf',
+    className: 'theme-marble',
+    bg: '#eef0ea',
+    accent: '#365a38',
+    soft: '#fafbf8',
+    ink: '#1b241b',
+    qrDark: '#1b241b',
+    qrLight: '#f7f8f4',
+  },
+  prism: {
+    label: 'Prism Noir',
+    className: 'theme-prism',
+    bg: '#111111',
+    accent: '#f0b0a4',
+    soft: '#f7ebe7',
+    ink: '#f7f7f7',
+    qrDark: '#f7f7f7',
+    qrLight: '#111111',
+  },
+}
+
+const themeAliases = {
+  default: 'classic',
+  ivory: 'classic',
+  midnight: 'tech',
+  navy: 'royal',
+  gold: 'royal',
+  luxe: 'wood',
+}
+
+const cardThemeOptions = Object.entries(CARD_THEMES).map(([value, theme]) => ({
+  value,
+  label: theme.label,
+}))
 
 function encodeCard(card) {
   return btoa(encodeURIComponent(JSON.stringify(card)))
@@ -60,7 +167,13 @@ function normalizeCard(card) {
   return {
     ...card,
     id: card.id || '',
+    theme: normalizeThemeKey(card.theme),
   }
+}
+
+function normalizeThemeKey(themeKey = 'classic') {
+  const key = String(themeKey || 'classic').trim().toLowerCase()
+  return themeAliases[key] || (CARD_THEMES[key] ? key : 'classic')
 }
 
 function dedupeCards(cards) {
@@ -353,17 +466,16 @@ function getContactItems(card, whatsappNumber, websiteUrl) {
   ].filter(Boolean)
 }
 
-function getCompanyTheme(companyName = '') {
-  const normalizedName = companyName.trim().toLowerCase() || 'visiting-card'
-  const score = normalizedName
-    .split('')
-    .reduce((total, char) => ((total << 5) - total + char.charCodeAt(0)) >>> 0, 0)
-  const hue = score % 360
+function getCompanyTheme(themeKey = 'classic') {
+  return CARD_THEMES[normalizeThemeKey(themeKey)] || CARD_THEMES.classic
+}
 
+function getThemeStyleVars(theme) {
   return {
-    bg: `hsl(${hue} 74% 16%)`,
-    accent: `hsl(${(hue + 38) % 360} 86% 72%)`,
-    soft: `hsl(${hue} 72% 96%)`,
+    '--card-bg': theme.bg,
+    '--card-accent': theme.accent,
+    '--card-soft': theme.soft,
+    '--theme-ink': theme.ink,
   }
 }
 
@@ -518,22 +630,10 @@ function LoginForm({ onSubmit, onBack, error }) {
           </button>
         </label>
         {error && <p className="login-error">{error}</p>}
-        <a className="forgot-link" href="#forgot">
-          Forgot Password?
-        </a>
         <div className="form-actions">
           <button type="submit">Sign In <span>→</span></button>
         </div>
-        <div className="signin-divider"><span>Or Sign in with</span></div>
-        <button className="google-button" type="button">
-          <b>G</b> Continue with Google
-        </button>
       </form>
-        <div className="login-footer">
-          <span>Privacy Settings</span>
-          <span>|</span>
-          <span>Terms & Conditions</span>
-        </div>
       </section>
     </main>
   )
@@ -547,8 +647,10 @@ function CardBack({ card, publicUrl }) {
     )
   }
 
+  const theme = getCompanyTheme(card.theme)
+
   return (
-    <article className="physical-preview-card physical-preview-card-back">
+    <article className={`physical-preview-card physical-preview-card-back ${theme.className}`} style={getThemeStyleVars(theme)}>
       <div className="physical-back-logo" aria-label={`${card.name || 'Card'} logo`}>
         <strong>{getInitials(card.name)}</strong>
         <span>{card.name || 'VISITING CARD'}</span>
@@ -590,9 +692,11 @@ function CardBack({ card, publicUrl }) {
 
 function CardFront({ card, publicUrl, showQr = false }) {
   const hasPhoto = !!card.imageUrl;
+  const themeKey = normalizeThemeKey(card.theme)
+  const theme = getCompanyTheme(themeKey)
   return (
-    <article className={`physical-preview-card physical-preview-card-front ${card.theme === 'fintech' ? 'theme-fintech-front' : ''} ${!hasPhoto ? 'no-photo' : ''}`}>
-      {card.theme === 'fintech' && (
+    <article className={`physical-preview-card physical-preview-card-front ${themeKey === 'fintech' ? 'theme-fintech-front' : theme.className} ${!hasPhoto ? 'no-photo' : ''}`}>
+      {themeKey === 'fintech' && (
         <img src="/fintech-logo.png" className="fintech-front-logo" alt="Fintech Logo" />
       )}
       {hasPhoto && (
@@ -606,8 +710,8 @@ function CardFront({ card, publicUrl, showQr = false }) {
           <div className="physical-preview-qr">
             <QrImage 
               value={publicUrl} 
-              darkColor={card.theme === 'fintech' ? '#000000ff' : undefined} 
-              lightColor={card.theme === 'fintech' ? '#00000000' : undefined} 
+              darkColor={themeKey === 'fintech' ? '#000000ff' : theme.qrDark}
+              lightColor={themeKey === 'fintech' ? '#00000000' : theme.qrLight}
             />
           </div>
         )}
@@ -678,10 +782,14 @@ function FlipCard({ front, back, className = '' }) {
 
 function CardPreview({ card, showQr = false }) {
   const publicUrl = useMemo(() => getPublicUrl(card), [card])
-  const theme = getCompanyTheme(card.companyName)
+  const theme = getCompanyTheme(card.theme)
+  const themeKey = normalizeThemeKey(card.theme)
 
   return (
-    <div className="physical-card-set" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent }}>
+    <div
+      className={`physical-card-set ${themeKey === 'fintech' ? '' : theme.className}`.trim()}
+      style={themeKey === 'fintech' ? undefined : getThemeStyleVars(theme)}
+    >
       <FlipCard front={<CardFront card={card} publicUrl={publicUrl} showQr={showQr} />} back={<CardBack card={card} publicUrl={publicUrl} />} />
     </div>
   )
@@ -743,8 +851,11 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
   const [card, setCard] = useState(emptyCard)
   const [message, setMessage] = useState('')
   const [cardToPrint, setCardToPrint] = useState(null)
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
+  const [themeSearch, setThemeSearch] = useState('')
   const cardsSectionRef = useRef(null)
   const imageInputRef = useRef(null)
+  const themeFieldRef = useRef(null)
 
   useEffect(() => {
     if (cardToPrint) {
@@ -758,6 +869,30 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
     }
   }, [cardToPrint])
 
+  useEffect(() => {
+    if (!isThemeMenuOpen) return
+
+    function handleClickOutside(event) {
+      if (!themeFieldRef.current?.contains(event.target)) {
+        setIsThemeMenuOpen(false)
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        setIsThemeMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isThemeMenuOpen])
+
   function updateField(event) {
     const { name, value } = event.target
     setCard((current) => {
@@ -768,6 +903,18 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
       return { ...current, ...updates }
     })
   }
+
+  function selectTheme(themeKey) {
+    setCard((current) => ({ ...current, theme: themeKey }))
+    setThemeSearch('')
+    setIsThemeMenuOpen(false)
+  }
+
+  const activeThemeKey = normalizeThemeKey(card.theme)
+  const activeTheme = CARD_THEMES[activeThemeKey] || CARD_THEMES.classic
+  const themeOptions = cardThemeOptions.filter((option) =>
+    option.label.toLowerCase().includes(themeSearch.trim().toLowerCase())
+  )
 
   function uploadImage(event) {
     const file = event.target.files?.[0]
@@ -839,13 +986,61 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
 
       <section className="builder-grid">
         <form className="builder-form" noValidate>
-          <label>
-            Theme
-            <select name="theme" value={card.theme || 'default'} onChange={updateField}>
-              <option value="default">Default</option>
-              <option value="fintech">Fintech Cloud</option>
-            </select>
-          </label>
+          <div className="theme-field" ref={themeFieldRef}>
+            <label className="field-label" htmlFor="theme-picker-button">Theme</label>
+            <div className="theme-dropdown">
+              <button
+                id="theme-picker-button"
+                type="button"
+                className={`theme-dropdown-trigger ${isThemeMenuOpen ? 'is-open' : ''}`}
+                aria-haspopup="listbox"
+                aria-expanded={isThemeMenuOpen}
+                onClick={() => setIsThemeMenuOpen((current) => !current)}
+              >
+                <span className="theme-dropdown-value">
+                  <span className="theme-dropdown-swatch" aria-hidden="true" style={{ background: activeTheme.bg }} />
+                  <span>{activeTheme.label}</span>
+                </span>
+                <FaChevronDown className="theme-dropdown-chevron" aria-hidden="true" />
+              </button>
+
+              {isThemeMenuOpen && (
+                <div className="theme-dropdown-panel" role="listbox" aria-label="Theme options">
+                  <label className="theme-dropdown-search">
+                    <span className="sr-only">Search theme</span>
+                    <input
+                      type="text"
+                      value={themeSearch}
+                      onChange={(event) => setThemeSearch(event.target.value)}
+                      placeholder="Search or type theme..."
+                    />
+                  </label>
+                  <div className="theme-dropdown-list">
+                    {themeOptions.length === 0 ? (
+                      <div className="theme-dropdown-empty">No themes found</div>
+                    ) : (
+                      themeOptions.map((option) => {
+                        const isActive = activeThemeKey === option.value
+
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={`theme-dropdown-option ${isActive ? 'is-active' : ''}`}
+                            aria-pressed={isActive}
+                            onClick={() => selectTheme(option.value)}
+                          >
+                            <span className="theme-dropdown-swatch" aria-hidden="true" style={{ background: CARD_THEMES[option.value]?.bg || '#fff' }} />
+                            <span className="theme-dropdown-label">{option.label}</span>
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           <label>
             Full Name
             <input name="name" value={card.name} onChange={updateField} placeholder="Enter client name" />
@@ -961,7 +1156,7 @@ function PublicCardPage({ card, onClose }) {
   const [shareMessage, setShareMessage] = useState('')
   const [isShareOpen, setIsShareOpen] = useState(false)
   const publicUrl = useMemo(() => getPublicUrl(card), [card])
-  const theme = getCompanyTheme(card.companyName)
+  const theme = getCompanyTheme(card.theme)
 
   const shareText = `${card.name || 'Visiting card'}${card.designation ? ` - ${card.designation}` : ''}\n${publicUrl}`
   const encodedShareText = encodeURIComponent(shareText)
@@ -1014,7 +1209,7 @@ function PublicCardPage({ card, onClose }) {
         </button>
       </header>
 
-      <section className="tapmo-hero" style={{ '--card-bg': theme.bg, '--card-accent': theme.accent, '--card-soft': theme.soft }}>
+      <section className={`tapmo-hero ${theme.className}`} style={getThemeStyleVars(theme)}>
         {!isShareOpen && (
           <div className="share-row">
             <button type="button" onClick={shareCard}>Share My Card</button>
