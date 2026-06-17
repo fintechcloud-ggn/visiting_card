@@ -481,16 +481,26 @@ function getThemeStyleVars(theme) {
 
 function useQrCode(value, options = {}) {
   const [src, setSrc] = useState('')
+  const dark = options.dark || '#000000'
+  const light = options.light || '#ffffff'
 
   useEffect(() => {
     let isActive = true
 
+    if (!value) {
+      if (isActive) setSrc('')
+      return () => {
+        isActive = false
+      }
+    }
+
     QRCode.toDataURL(value, {
       width: 220,
       margin: 2,
+      errorCorrectionLevel: 'H',
       color: {
-        dark: options.dark || '#b1cddbff',
-        light: options.light || '#ffffff',
+        dark,
+        light,
       },
     }).then((dataUrl) => {
       if (isActive) setSrc(dataUrl)
@@ -501,7 +511,7 @@ function useQrCode(value, options = {}) {
     return () => {
       isActive = false
     }
-  }, [value])
+  }, [value, dark, light])
 
   return src
 }
@@ -517,7 +527,15 @@ function QrDisplay({ card, value }) {
     return <img className="qr-image" src={card.qrCode} alt="QR code stored in S3" />
   }
 
-  return <QrImage value={value} />
+  const theme = getCompanyTheme(card.theme)
+
+  return (
+    <QrImage
+      value={value}
+      darkColor={theme.qrDark || '#000000'}
+      lightColor={theme.qrLight || '#ffffff'}
+    />
+  )
 }
 
 function AdminHome({ onLogin }) {
