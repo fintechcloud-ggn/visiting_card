@@ -1246,6 +1246,28 @@ input:focus {
   cursor: pointer;
 }
 
+.remove-image-button {
+  margin-left: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-image-preview {
+  margin-top: 12px;
+}
+
+.edit-image-preview img {
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  max-height: 220px;
+}
+
 .danger-button {
   border: 1px solid #fecaca;
   border-radius: 8px;

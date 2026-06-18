@@ -874,6 +874,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
   const [themeSearch, setThemeSearch] = useState('')
   const cardsSectionRef = useRef(null)
   const imageInputRef = useRef(null)
+  const editImageInputRef = useRef(null)
   const themeFieldRef = useRef(null)
 
   useEffect(() => {
@@ -954,6 +955,37 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
     const reader = new FileReader()
     reader.onload = () => {
       setCard((current) => ({
+        ...current,
+        imageUrl: reader.result,
+      }))
+      setMessage('')
+    }
+    reader.onerror = () => {
+      setMessage('Image could not be uploaded. Please try another file.')
+      event.target.value = ''
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function uploadEditImage(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setMessage('Please upload an image file.')
+      event.target.value = ''
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage('Please upload an image smaller than 2 MB.')
+      event.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCardToEdit((current) => ({
         ...current,
         imageUrl: reader.result,
       }))
@@ -1236,6 +1268,40 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                   />
                 </label>
                 <label>
+                  Image URL or Upload
+                  <input
+                    name="imageUrl"
+                    value={cardToEdit.imageUrl || ''}
+                    onChange={(e) => setCardToEdit((current) => ({ ...current, imageUrl: e.target.value }))}
+                    placeholder="https://example.com/photo.jpg"
+                  />
+                  <span className="image-upload-row">
+                    <input
+                      ref={editImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={uploadEditImage}
+                    />
+                    {cardToEdit.imageUrl && (
+                      <button
+                        type="button"
+                        className="secondary-button remove-image-button"
+                        onClick={() => {
+                          setCardToEdit((current) => ({ ...current, imageUrl: '' }))
+                          if (editImageInputRef.current) editImageInputRef.current.value = ''
+                        }}
+                      >
+                        Remove image
+                      </button>
+                    )}
+                  </span>
+                </label>
+                {cardToEdit.imageUrl && (
+                  <div className="edit-image-preview">
+                    <img src={formatUrl(cardToEdit.imageUrl)} alt="Card image preview" />
+                  </div>
+                )}
+                <label>
                   Office Address
                   <textarea 
                     name="officeAddress" 
@@ -1252,7 +1318,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
               <button className="admin-login-button" onClick={() => {
                 onCreate(cardToEdit)
                 setCardToEdit(null)
-              }}>Save Changes</button>
+              }} type="button">Save Changes</button>
             </div>
           </div>
         </div>
