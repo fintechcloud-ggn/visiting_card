@@ -865,7 +865,7 @@ function ShareCardModal({
   )
 }
 
-function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
+function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit }) {
   const [card, setCard] = useState(emptyCard)
   const [message, setMessage] = useState('')
   const [cardToPrint, setCardToPrint] = useState(null)
@@ -1146,6 +1146,9 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView }) {
                   </button>
                   <button className="secondary-button" onClick={() => setCardToPrint(savedCard)}>
                     Print
+                  </button>
+                  <button className="secondary-button" onClick={() => onEdit(savedCard)}>
+                    Edit
                   </button>
                   <button className="danger-button" onClick={() => onDelete(savedCard)}>
                     Delete
@@ -1474,6 +1477,10 @@ function App() {
             ? `/card-id/${encodeURIComponent(card.id)}`
             : `/card/${encodeCard(getShareableCard(publicCard))}`
           setScreen('public')
+        }}
+        onEdit={(card) => {
+          setCard(card)
+          document.querySelector('.builder-grid')?.scrollIntoView({ behavior: 'smooth' })
         }}
       />
       {cardToDelete && (
