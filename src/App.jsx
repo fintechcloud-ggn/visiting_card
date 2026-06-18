@@ -867,6 +867,7 @@ function ShareCardModal({
 
 function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit }) {
   const [card, setCard] = useState(emptyCard)
+  const [cardToEdit, setCardToEdit] = useState(null)
   const [message, setMessage] = useState('')
   const [cardToPrint, setCardToPrint] = useState(null)
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
@@ -1147,7 +1148,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                   <button className="secondary-button" onClick={() => setCardToPrint(savedCard)}>
                     Print
                   </button>
-                  <button className="secondary-button" onClick={() => onEdit(savedCard)}>
+                  <button className="secondary-button" onClick={() => setCardToEdit(savedCard)}>
                     Edit
                   </button>
                   <button className="danger-button" onClick={() => onDelete(savedCard)}>
@@ -1166,6 +1167,93 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
             <CardFront card={cardToPrint} publicUrl={getPublicUrl(cardToPrint)} showQr />
             <div className="print-gap"></div>
             <CardBack card={cardToPrint} publicUrl={getPublicUrl(cardToPrint)} />
+          </div>
+        </div>
+      )}
+
+      {cardToEdit && (
+        <div className="modal-overlay" onClick={() => setCardToEdit(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Card</h2>
+              <button className="modal-close" onClick={() => setCardToEdit(null)} type="button">×</button>
+            </div>
+            <div className="modal-body">
+              <form noValidate>
+                <label>
+                  Name
+                  <input 
+                    name="name" 
+                    value={cardToEdit.name} 
+                    onChange={(e) => setCardToEdit({...cardToEdit, name: e.target.value})} 
+                    placeholder="Full Name" 
+                  />
+                </label>
+                <label>
+                  Mobile
+                  <input 
+                    name="mobile" 
+                    value={cardToEdit.mobile} 
+                    onChange={(e) => setCardToEdit({...cardToEdit, mobile: e.target.value})} 
+                    placeholder="Mobile Number" 
+                  />
+                </label>
+                <label>
+                  Designation
+                  <input 
+                    name="designation" 
+                    value={cardToEdit.designation} 
+                    onChange={(e) => setCardToEdit({...cardToEdit, designation: e.target.value})} 
+                    placeholder="Job Title" 
+                  />
+                </label>
+                <label>
+                  Company Name
+                  <input 
+                    name="companyName" 
+                    value={cardToEdit.companyName} 
+                    onChange={(e) => setCardToEdit({...cardToEdit, companyName: e.target.value})} 
+                    placeholder="Company Name" 
+                  />
+                </label>
+                <label>
+                  Email
+                  <input 
+                    name="email" 
+                    type="email"
+                    value={cardToEdit.email} 
+                    onChange={(e) => setCardToEdit({...cardToEdit, email: e.target.value})} 
+                    placeholder="Email Address" 
+                  />
+                </label>
+                <label>
+                  Website
+                  <input 
+                    name="website" 
+                    value={cardToEdit.website} 
+                    onChange={(e) => setCardToEdit({...cardToEdit, website: e.target.value})} 
+                    placeholder="Website URL" 
+                  />
+                </label>
+                <label>
+                  Office Address
+                  <textarea 
+                    name="officeAddress" 
+                    value={cardToEdit.officeAddress} 
+                    onChange={(e) => setCardToEdit({...cardToEdit, officeAddress: e.target.value})} 
+                    placeholder="Full Address"
+                    rows="3"
+                  />
+                </label>
+              </form>
+            </div>
+            <div className="modal-actions">
+              <button className="secondary-button" onClick={() => setCardToEdit(null)}>Cancel</button>
+              <button className="admin-login-button" onClick={() => {
+                onCreate(cardToEdit)
+                setCardToEdit(null)
+              }}>Save Changes</button>
+            </div>
           </div>
         </div>
       )}
@@ -1479,8 +1567,7 @@ function App() {
           setScreen('public')
         }}
         onEdit={(card) => {
-          setCard(card)
-          document.querySelector('.builder-grid')?.scrollIntoView({ behavior: 'smooth' })
+          // This is not being used anymore since edit modal is now inside AdminDashboard
         }}
       />
       {cardToDelete && (

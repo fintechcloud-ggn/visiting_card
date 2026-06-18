@@ -1282,8 +1282,79 @@ input:focus {
   border-radius: 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   text-align: center;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #111827;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  color: #111827;
+}
+
+.modal-body {
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.modal-body form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.modal-body input,
+.modal-body textarea {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.modal-body input:focus,
+.modal-body textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .modal-content h3 {
@@ -1726,10 +1797,12 @@ input:focus {
   max-width: 100%;
   margin-left: auto;
   border-bottom: 2px solid rgba(255, 255, 255, 0.9);
-  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  font-weight: 600;
   font-size: clamp(22px, 3.4vw, 34px);
   line-height: 1.05;
   overflow-wrap: anywhere;
+  letter-spacing: -0.5px;
 }
 
 .physical-role {
