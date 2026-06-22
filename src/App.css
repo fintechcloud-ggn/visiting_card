@@ -4949,6 +4949,21 @@ input:focus {
   text-align: right;
 }
 
+.theme-fintech-front .physical-email,
+.theme-fintech-front .physical-phone,
+.theme-fintech-front .physical-address,
+.theme-fintech-front .physical-role,
+.theme-fintech-front .physical-company {
+  text-transform: none !important;
+}
+
+.theme-fintech-front .physical-email {
+  color: rgba(0, 0, 0, 0.9);
+  font-size: clamp(10px, 1.5vw, 14px);
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
 .theme-fintech-front .physical-preview-qr {
   position: absolute;
   bottom: 8%;

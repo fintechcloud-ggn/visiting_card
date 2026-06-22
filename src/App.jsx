@@ -739,6 +739,7 @@ function CardFront({ card, publicUrl, showQr = false }) {
           <div className="physical-company">{card.companyName || 'Company Name'}</div>
         </div>
         <div className="physical-phone">{card.mobile || '+91 XXXXX XXXXX'}</div>
+        {card.email && <div className="physical-email">{card.email}</div>}
         <div className="physical-address">{card.officeAddress || 'Office address'}</div>
       </div>
     </article>
