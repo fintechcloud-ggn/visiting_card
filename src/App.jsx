@@ -1372,6 +1372,28 @@ function PublicCardPage({ card, onClose }) {
     setIsShareOpen(true)
   }
 
+  async function exchangeContact() {
+    if (navigator.share && window.isSecureContext) {
+      await shareNative()
+      return
+    }
+
+    shareCard()
+  }
+
+  function downloadVcard() {
+    const vcardText = getVcard(card)
+    const blob = new Blob([vcardText], { type: 'text/vcard;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${card.name ? card.name.replace(/\s+/g, '_') : 'contact'}.vcf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <main className="tapmo-page">
       <header className="tapmo-topbar">
@@ -1386,8 +1408,9 @@ function PublicCardPage({ card, onClose }) {
 
       <section className={`tapmo-hero ${theme.className}`} style={getThemeStyleVars(theme)}>
         {!isShareOpen && (
-          <div className="share-row">
-            <button type="button" onClick={shareCard}>Share My Card</button>
+          <div className="tapmo-action-row">
+            <button type="button" onClick={downloadVcard}>Save Contact</button>
+            <button type="button" onClick={exchangeContact}>Exchange Contact</button>
           </div>
         )}
         {shareMessage && <p className="share-status">{shareMessage}</p>}
