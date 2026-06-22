@@ -736,10 +736,11 @@ function CardFront({ card, publicUrl, showQr = false }) {
         <div>
           <div className="physical-signature">{card.name || 'Client Name'}</div>
           <div className="physical-role">{card.designation || 'Designation'}</div>
-          <div className="physical-company">{card.companyName || 'Company Name'}</div>
+          {themeKey !== 'fintech' && <div className="physical-company">{card.companyName || 'Company Name'}</div>}
         </div>
         <div className="physical-phone">{card.mobile || '+91 XXXXX XXXXX'}</div>
         {card.email && <div className="physical-email">{card.email}</div>}
+        {themeKey === 'fintech' && <div className="physical-company">{card.companyName || 'Company Name'}</div>}
         <div className="physical-address">{card.officeAddress || 'Office address'}</div>
       </div>
     </article>
