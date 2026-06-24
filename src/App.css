@@ -4944,9 +4944,10 @@ input:focus {
 .theme-fintech-front .physical-preview-details {
   order: 1;
   position: static !important;
-  padding: 16% 6% 6% 4% !important;
+  padding: 12% 6% 6% 4% !important;
   align-items: flex-end;
   text-align: right;
+  align-content: center !important;
 }
 
 .theme-fintech-front .physical-email,
@@ -4962,6 +4963,25 @@ input:focus {
   font-size: clamp(10px, 1.5vw, 14px);
   font-weight: 700;
   margin-top: 0.25rem;
+  margin-bottom: 0.1rem;
+}
+
+.theme-fintech-front .physical-contact-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.08rem;
+  margin-top: 0.9rem !important;
+}
+
+.theme-fintech-front .physical-company {
+  margin: 0;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em;
+}
+
+.theme-fintech-front .physical-address {
+  margin-top: 0.05rem !important;
 }
 
 .theme-fintech-front .physical-preview-qr {

@@ -738,10 +738,12 @@ function CardFront({ card, publicUrl, showQr = false }) {
           <div className="physical-role">{card.designation || 'Designation'}</div>
           {themeKey !== 'fintech' && <div className="physical-company">{card.companyName || 'Company Name'}</div>}
         </div>
-        <div className="physical-phone">{card.mobile || '+91 XXXXX XXXXX'}</div>
-        {card.email && <div className="physical-email">{card.email}</div>}
-        {themeKey === 'fintech' && <div className="physical-company">{card.companyName || 'Company Name'}</div>}
-        <div className="physical-address">{card.officeAddress || 'Office address'}</div>
+        <div className="physical-contact-group">
+          <div className="physical-phone">{card.mobile || '+91 XXXXX XXXXX'}</div>
+          {card.email && <div className="physical-email">{card.email}</div>}
+          {themeKey === 'fintech' && <div className="physical-company">{card.companyName || 'Company Name'}</div>}
+          <div className="physical-address">{card.officeAddress || 'Office address'}</div>
+        </div>
       </div>
     </article>
   )
