@@ -5001,7 +5001,7 @@ input:focus {
   color: #f0b0a4;
 }
 
-.theme-fintech {
+.physical-preview-card-back.theme-fintech {
   background-image: url('/fintech-back.png');
   background-size: cover;
   background-position: center;
