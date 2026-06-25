@@ -5146,6 +5146,7 @@ input:focus {
   margin-top: 3rem !important;
   font-weight: 900 !important;
   letter-spacing: 0.02em;
+  font-size: clamp(9px, 2.5cqw, 14px) !important;
 }
 
 .theme-fintech-front .physical-address {
