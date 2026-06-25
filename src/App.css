@@ -5099,7 +5099,7 @@ input:focus {
   position: absolute;
   top: 8%;
   left: 6%;
-  width: 32%;
+  width: 22%;
   z-index: 10;
   object-fit: contain;
   mix-blend-mode: multiply;
@@ -5128,7 +5128,7 @@ input:focus {
   color: rgba(0, 0, 0, 0.9);
   font-size: clamp(10px, 1.5vw, 14px);
   font-weight: 700;
-  margin-top: 0.25rem;
+  margin-top: 0.75rem !important;
   margin-bottom: 0.1rem;
 }
 
@@ -5142,6 +5142,7 @@ input:focus {
 
 .theme-fintech-front .physical-company {
   margin: 0;
+  margin-top: 3rem !important;
   font-weight: 900 !important;
   letter-spacing: 0.02em;
 }
