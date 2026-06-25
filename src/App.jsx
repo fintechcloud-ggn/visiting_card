@@ -411,13 +411,13 @@ function SocialIcon({ name }) {
   }
 
   return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       style={{ width: '32px', height: '32px' }}
       aria-hidden="true"
     >
@@ -627,31 +627,43 @@ function LoginForm({ onSubmit, onBack, error }) {
         <form className="login-card" onSubmit={onSubmit}>
           <h1>Welcome back!</h1>
           <p>Please enter your details to sign in.</p>
-        <label>
-          <input name="username" type="email" placeholder="Username" required />
-        </label>
-        <label className="password-field">
-          <input
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Password"
-            required
-          />
-          <button
-            className="password-toggle"
-            type="button"
-            onClick={() => setShowPassword((current) => !current)}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            aria-pressed={showPassword}
-          >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          <label>
+            <input name="username" type="email" placeholder="Username" required />
+          </label>
+          <label className="password-field">
+            <input
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              required
+            />
+            <button
+              className="password-toggle"
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </label>
+          {error && <p className="login-error">{error}</p>}
+          <a className="forgot-link" href="#forgot">
+            Forgot Password?
+          </a>
+          <div className="form-actions">
+            <button type="submit">Sign In <span>→</span></button>
+          </div>
+          <div className="signin-divider"><span>Or Sign in with</span></div>
+          <button className="google-button" type="button">
+            <b>G</b> Continue with Google
           </button>
-        </label>
-        {error && <p className="login-error">{error}</p>}
-        <div className="form-actions">
-          <button type="submit">Sign In <span>→</span></button>
+        </form>
+        <div className="login-footer">
+          <span>Privacy Settings</span>
+          <span>|</span>
+          <span>Terms & Conditions</span>
         </div>
-      </form>
       </section>
     </main>
   )
@@ -726,8 +738,8 @@ function CardFront({ card, publicUrl, showQr = false }) {
       <div className="physical-preview-details">
         {showQr && (
           <div className="physical-preview-qr">
-            <QrImage 
-              value={publicUrl} 
+            <QrImage
+              value={publicUrl}
               darkColor={themeKey === 'fintech' ? '#000000ff' : theme.qrDark}
               lightColor={themeKey === 'fintech' ? '#00000000' : theme.qrLight}
             />
@@ -1673,88 +1685,85 @@ function App() {
 
   if (screen === 'dashboard') {
     if (!isAuthenticated) {
-      return <LoginForm onBack={goHome} error={loginError} onSubmit={() => {}} />
+      return <LoginForm onBack={goHome} error={loginError} onSubmit={() => { }} />
     }
 
     return (
       <>
-      <AdminDashboard
-        cards={cards}
-        onLogout={() => {
-          clearUiState()
-          goHome()
-        }}
-        onCreate={async (card) => {
-          const nextCard = appConfig.useApi
-            ? await apiRequest('/api/cards', {
+        <AdminDashboard
+          cards={cards}
+          onLogout={() => {
+            clearUiState()
+            goHome()
+          }}
+          onCreate={async (card) => {
+            const nextCard = appConfig.useApi
+              ? await apiRequest('/api/cards', {
                 method: 'POST',
                 body: JSON.stringify(card),
               }).catch(() => card)
-            : card
+              : card
 
-          setCardStore((current) => {
-            const remainingCards = (current.cards || []).filter((item) => item.id !== nextCard.id)
-            const remainingDeletedIds = (current.deletedIds || []).filter((id) => id !== nextCard.id)
-            return {
-              cards: [nextCard, ...remainingCards],
-              deletedIds: remainingDeletedIds,
-            }
-          })
+            setCardStore((current) => {
+              const remainingCards = (current.cards || []).filter((item) => item.id !== nextCard.id)
+              const remainingDeletedIds = (current.deletedIds || []).filter((id) => id !== nextCard.id)
+              return {
+                cards: [nextCard, ...remainingCards],
+                deletedIds: remainingDeletedIds,
+              }
+            })
 
-          return nextCard
-        }}
-        onDelete={(card) => {
-          setCardToDelete(card)
-        }}
-        onView={(card) => {
-          const publicCard = card
-          setPublicCard(publicCard)
-          window.location.hash = appConfig.useApi && card.id
-            ? `/card-id/${encodeURIComponent(card.id)}`
-            : `/card/${encodeCard(getShareableCard(publicCard))}`
-          setScreen('public')
-        }}
-        onEdit={(card) => {
-          // This is not being used anymore since edit modal is now inside AdminDashboard
-        }}
-      />
-      {cardToDelete && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Delete Card</h3>
-            <p>Are you sure you want to delete {cardToDelete.name}'s visiting card?</p>
-            <div className="modal-actions">
-              <button className="secondary-button" onClick={() => setCardToDelete(null)}>Cancel</button>
-              <button className="danger-button" onClick={async () => {
-                const card = cardToDelete;
-                setCardToDelete(null);
-                try {
-                  setCardStore((current) => {
-                    const nextCards = (current.cards || []).filter((c) => c.id !== card.id)
-                    const nextDeletedIds = [...new Set([...(current.deletedIds || []), card.id])]
-                    return {
-                      cards: nextCards,
-                      deletedIds: appConfig.useApi ? nextDeletedIds : [],
-                    }
-                  })
-
-                  if (appConfig.useApi) {
-                    await apiRequest(`/api/cards/${card.id}`, { method: 'DELETE' }).catch((error) => {
-                      if (!/not found/i.test(error.message || '')) throw error
+            return nextCard
+          }}
+          onDelete={(card) => {
+            setCardToDelete(card)
+          }}
+          onView={(card) => {
+            const publicCard = card
+            setPublicCard(publicCard)
+            window.location.hash = appConfig.useApi && card.id
+              ? `/card-id/${encodeURIComponent(card.id)}`
+              : `/card/${encodeCard(getShareableCard(publicCard))}`
+            setScreen('public')
+          }}
+        />
+        {cardToDelete && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>Delete Card</h3>
+              <p>Are you sure you want to delete {cardToDelete.name}'s visiting card?</p>
+              <div className="modal-actions">
+                <button className="secondary-button" onClick={() => setCardToDelete(null)}>Cancel</button>
+                <button className="danger-button" onClick={async () => {
+                  const card = cardToDelete;
+                  setCardToDelete(null);
+                  try {
+                    setCardStore((current) => {
+                      const nextCards = (current.cards || []).filter((c) => c.id !== card.id)
+                      const nextDeletedIds = [...new Set([...(current.deletedIds || []), card.id])]
+                      return {
+                        cards: nextCards,
+                        deletedIds: appConfig.useApi ? nextDeletedIds : [],
+                      }
                     })
-                    setCardStore((current) => ({
-                      cards: current.cards || [],
-                      deletedIds: (current.deletedIds || []).filter((id) => id !== card.id),
-                    }))
+
+                    if (appConfig.useApi) {
+                      await apiRequest(`/api/cards/${card.id}`, { method: 'DELETE' }).catch((error) => {
+                        if (!/not found/i.test(error.message || '')) throw error
+                      })
+                      setCardStore((current) => ({
+                        cards: current.cards || [],
+                        deletedIds: (current.deletedIds || []).filter((id) => id !== card.id),
+                      }))
+                    }
+                  } catch (error) {
+                    alert(error.message || 'Failed to delete card.')
                   }
-                } catch (error) {
-                  alert(error.message || 'Failed to delete card.')
-                }
-              }}>Delete</button>
+                }}>Delete</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </>
     )
   }
