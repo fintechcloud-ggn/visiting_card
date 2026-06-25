@@ -111,7 +111,7 @@ async function runMigration() {
         row.instagram || null,
         '',
         '',
-        row.company_name || '',
+        row.company_name?.toLowerCase().includes('fintech') ? 'fintech' : 'classic',
         row.id,
         row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
       ],

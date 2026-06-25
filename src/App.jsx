@@ -725,7 +725,10 @@ function CardFront({ card, publicUrl, showQr = false }) {
   const themeKey = normalizeThemeKey(card.theme)
   const theme = getCompanyTheme(themeKey)
   return (
-    <article className={`physical-preview-card physical-preview-card-front ${themeKey === 'fintech' ? 'theme-fintech-front' : theme.className} ${!hasPhoto ? 'no-photo' : ''}`}>
+    <article 
+      className={`physical-preview-card physical-preview-card-front ${themeKey === 'fintech' ? 'theme-fintech-front' : theme.className} ${!hasPhoto ? 'no-photo' : ''}`}
+      style={themeKey === 'fintech' ? undefined : getThemeStyleVars(theme)}
+    >
       {themeKey === 'fintech' && (
         <img src="/fintech-logo.png" className="fintech-front-logo" alt="Fintech Logo" />
       )}
@@ -1228,6 +1231,19 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
             </div>
             <div className="modal-body">
               <form noValidate>
+                <label>
+                  Theme
+                  <select 
+                    name="theme" 
+                    value={cardToEdit.theme || 'classic'} 
+                    onChange={(e) => setCardToEdit({...cardToEdit, theme: e.target.value})}
+                    className="edit-theme-select"
+                  >
+                    {cardThemeOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
                 <label>
                   Name
                   <input 

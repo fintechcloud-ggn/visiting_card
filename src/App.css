@@ -1363,9 +1363,11 @@ input:focus {
 }
 
 .modal-body input,
+.modal-body select,
 .modal-body textarea {
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d2dce6;
   border-radius: 6px;
   font-family: inherit;
   font-size: 14px;
@@ -1373,9 +1375,10 @@ input:focus {
 }
 
 .modal-body input:focus,
+.modal-body select:focus,
 .modal-body textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--primary-accent, #3b82f6);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -5030,10 +5033,11 @@ input:focus {
 }
 
 .theme-fintech-front {
-  grid-template-columns: 1fr 38% !important;
+  grid-template-columns: 1fr !important;
   font-family: "Times New Roman", Times, serif !important;
   background: #e0f2fe !important;
   color: #000000 !important;
+  position: relative !important;
 }
 
 .theme-fintech-front * {
@@ -5050,15 +5054,14 @@ input:focus {
 }
 
 .theme-fintech-front .physical-preview-photo {
-  order: 2;
-  margin: 22px 22px 22px 14px !important;
+  display: none !important;
 }
 
 .fintech-front-logo {
   position: absolute;
   top: 8%;
   left: 6%;
-  width: 18%;
+  width: 32%;
   z-index: 10;
   object-fit: contain;
   mix-blend-mode: multiply;
@@ -5067,11 +5070,12 @@ input:focus {
 
 .theme-fintech-front .physical-preview-details {
   order: 1;
-  position: static !important;
-  padding: 12% 6% 6% 4% !important;
+  position: relative !important;
+  padding: 12% 8% 8% 40% !important;
   align-items: flex-end;
   text-align: right;
-  align-content: center !important;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .theme-fintech-front .physical-email,
@@ -5110,12 +5114,12 @@ input:focus {
 
 .theme-fintech-front .physical-preview-qr {
   position: absolute;
-  bottom: 8%;
-  left: 3%;
-  width: 26%;
+  bottom: 12%;
+  left: 8%;
+  width: 24%;
   margin: 0;
   padding: 0;
-  background: transparent;
+  background: transparent !important;
   z-index: 10;
 }
 
@@ -5123,6 +5127,7 @@ input:focus {
   width: 100% !important;
   height: auto !important;
   aspect-ratio: 1;
+  mix-blend-mode: multiply;
 }
 
 .theme-royal.physical-preview-card-front,
@@ -5260,9 +5265,7 @@ input:focus {
 
   .print-only {
     display: block !important;
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative !important;
     width: 100%;
     background: white;
     z-index: 9999;
@@ -5289,10 +5292,12 @@ input:focus {
 
   .print-only .physical-preview-card {
     width: 3.5in !important; /* Standard visiting card width (8.89 cm) */
-    height: auto !important;
-    aspect-ratio: 1.72 !important; /* Preserves our design aspect ratio */
+    height: 2.035in !important; /* Explicit height (3.5in / 1.72) fixes aspect-ratio print bugs */
+    aspect-ratio: auto !important; 
     box-shadow: none !important;
     border: 1px solid #ccc !important;
     margin: 0 auto !important;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
   }
 }
