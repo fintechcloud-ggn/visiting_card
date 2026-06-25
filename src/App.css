@@ -1807,14 +1807,19 @@ input:focus {
 }
 
 .physical-preview-qr {
-  justify-self: center;
-  padding: 8px;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 6px;
   background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
 }
 
 .physical-preview-qr .qr-image {
-  width: 96px;
-  height: 96px;
+  width: 58px;
+  height: 58px;
 }
 
 .physical-signature {
