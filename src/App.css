@@ -1808,13 +1808,15 @@ input:focus {
 
 .physical-preview-qr {
   justify-self: center;
-  padding: 8px;
+  padding: 4px;
   background: #fff;
+  border-radius: 6px;
+  margin-top: 8px;
 }
 
 .physical-preview-qr .qr-image {
-  width: 96px;
-  height: 96px;
+  width: 56px;
+  height: 56px;
 }
 
 .physical-signature {
