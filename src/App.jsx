@@ -1340,6 +1340,10 @@ function PublicCardPage({ card, onClose }) {
   const shareText = `${card.name || 'Visiting card'}${card.designation ? ` - ${card.designation}` : ''}\n${publicUrl}`
   const encodedShareText = encodeURIComponent(shareText)
   const encodedShareSubject = encodeURIComponent(`${card.name || 'Visiting card'} - Digital visiting card`)
+  const whatsappNumber = card.mobile?.replace(/\D/g, '')
+  const websiteUrl = card.website ? formatUrl(card.website) : ''
+  const contactItems = getContactItems(card, whatsappNumber, websiteUrl)
+  const socialLinks = getSocialLinks(card)
 
   async function shareNative() {
     const shareData = {
@@ -1412,15 +1416,60 @@ function PublicCardPage({ card, onClose }) {
 
       <section className={`tapmo-hero ${theme.className}`} style={getThemeStyleVars(theme)}>
         {!isShareOpen && (
-          <div className="tapmo-action-row">
-            <button type="button" onClick={downloadVcard}>Save Contact</button>
-            <button type="button" onClick={exchangeContact}>Exchange Contact</button>
+          <div className="tapmo-share-row">
+            <button type="button" className="tapmo-share-button" onClick={shareCard}>Share My Card</button>
           </div>
         )}
         {shareMessage && <p className="share-status">{shareMessage}</p>}
         <div className="tapmo-card-set">
           <CardPreview card={card} showQr={true} />
         </div>
+        {!isShareOpen && (
+          <div className="tapmo-action-row tapmo-card-actions">
+            <button type="button" className="tapmo-secondary-button" onClick={downloadVcard}>Save Contact</button>
+            <button type="button" className="tapmo-primary-button" onClick={exchangeContact}>Exchange Contact</button>
+          </div>
+        )}
+
+        {socialLinks.length > 0 && (
+          <>
+            <h2 className="tapmo-section-title">Social networks</h2>
+            <div className="tapmo-socials">
+              {socialLinks.map((link) => (
+                <a key={link.key} className={link.className} href={link.url} target="_blank" rel="noreferrer noopener" aria-label={link.key}>
+                  <SocialIcon name={link.icon} />
+                </a>
+              ))}
+            </div>
+          </>
+        )}
+
+        {contactItems.length > 0 && (
+          <>
+            <h2 className="tapmo-section-title">Contact info.</h2>
+            <div className="tapmo-contact-list">
+              {contactItems.map((item) => (
+                item.href ? (
+                  <a key={item.key} href={item.href} target="_blank" rel="noreferrer noopener">
+                    <span className="contact-icon-wrap"><ContactIcon name={item.icon} /></span>
+                    <div>
+                      <b>{item.label}</b>
+                    </div>
+                    <span className="tapmo-contact-arrow">›</span>
+                  </a>
+                ) : (
+                  <div key={item.key} className="tapmo-contact-static">
+                    <span className="contact-icon-wrap"><ContactIcon name={item.icon} /></span>
+                    <div>
+                      <b>{item.label}</b>
+                    </div>
+                    <span className="tapmo-contact-arrow">›</span>
+                  </div>
+                )
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {isShareOpen && (
@@ -1541,7 +1590,13 @@ function App() {
             if (isActive) setPublicCard(card)
           })
           .catch(() => {
-            if (isActive) setPublicCard(null)
+            if (!isActive) return
+            const fallbackCard = cards.find((item) => item.id === cardId)
+            if (fallbackCard) {
+              setPublicCard(fallbackCard)
+            } else {
+              setPublicCard(null)
+            }
           })
         return
       }
