@@ -71,6 +71,11 @@ async function ensureSchema() {
 }
 
 function rowToCard(row) {
+  let theme = row.card_theme || 'classic'
+  if (theme === 'classic' && row.company_name && String(row.company_name).toLowerCase().includes('fintech')) {
+    theme = 'fintech'
+  }
+
   return {
     id: row.card_slug || `card-${row.id}`,
     name: row.employee_name,
@@ -86,7 +91,7 @@ function rowToCard(row) {
     facebook: row.facebook_url || '',
     instagram: row.instagram_url || '',
     qrCode: row.qr_code || '',
-    theme: row.card_theme || 'classic',
+    theme,
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
   }
 }

@@ -164,10 +164,15 @@ function getShareableCard(card) {
 function normalizeCard(card) {
   if (!card || typeof card !== 'object') return null
 
+  let theme = normalizeThemeKey(card.theme)
+  if (theme === 'classic' && card.companyName && String(card.companyName).toLowerCase().includes('fintech')) {
+    theme = 'fintech'
+  }
+
   return {
     ...card,
     id: card.id || '',
-    theme: normalizeThemeKey(card.theme),
+    theme,
   }
 }
 
