@@ -1454,6 +1454,9 @@ function PublicCardPage({ card, onClose }) {
         </div>
         {!isShareOpen && (
           <div className="tapmo-action-row tapmo-card-actions">
+            {card.officeAddress && (
+              <button type="button" className="tapmo-secondary-button" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(card.officeAddress)}`, '_blank')}>Location</button>
+            )}
             <button type="button" className="tapmo-secondary-button" onClick={downloadVcard}>Save Contact</button>
             <button type="button" className="tapmo-primary-button" onClick={exchangeContact}>Exchange Contact</button>
           </div>
