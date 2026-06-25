@@ -1807,19 +1807,14 @@ input:focus {
 }
 
 .physical-preview-qr {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  padding: 6px;
+  justify-self: center;
+  padding: 8px;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 10;
 }
 
 .physical-preview-qr .qr-image {
-  width: 58px;
-  height: 58px;
+  width: 96px;
+  height: 96px;
 }
 
 .physical-signature {
@@ -5113,7 +5108,6 @@ input:focus {
 
 .theme-fintech-front .physical-preview-details {
   order: 1;
-  position: relative !important;
   padding: 12% 8% 8% 40% !important;
   align-items: flex-end;
   text-align: right;
