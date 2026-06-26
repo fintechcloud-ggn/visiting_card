@@ -748,8 +748,8 @@ function CardFront({ card, publicUrl, showQr = false }) {
           <div className="physical-preview-qr">
             <QrImage
               value={publicUrl}
-              darkColor={themeKey === 'fintech' ? '#000000ff' : theme.qrDark}
-              lightColor={themeKey === 'fintech' ? '#00000000' : theme.qrLight}
+              darkColor={theme.qrDark}
+              lightColor={theme.qrLight}
             />
           </div>
         )}
