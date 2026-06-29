@@ -332,7 +332,7 @@ function getAppBaseUrl() {
 function getPublicUrl(card) {
   const baseUrl = getAppBaseUrl()
 
-  if (appConfig.useApi && card.id) {
+  if (card.id) {
     return `${baseUrl}/#/card-id/${encodeURIComponent(card.id)}`
   }
 
@@ -1782,7 +1782,7 @@ function App() {
           onView={(card) => {
             const publicCard = card
             setPublicCard(publicCard)
-            window.location.hash = appConfig.useApi && card.id
+            window.location.hash = card.id
               ? `/card-id/${encodeURIComponent(card.id)}`
               : `/card/${encodeCard(getShareableCard(publicCard))}`
             setScreen('public')
