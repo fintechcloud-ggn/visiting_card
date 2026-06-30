@@ -2565,6 +2565,7 @@ input:focus {
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .tapmo-action-row .tapmo-primary-button,
@@ -2574,11 +2575,26 @@ input:focus {
   border: 1px solid #07163f;
 }
 
+.tapmo-action-row .tapmo-primary-button:hover,
+.tapmo-primary-button:hover {
+  background: #0f2a7a;
+  border-color: #0f2a7a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
 .tapmo-action-row .tapmo-secondary-button,
 .tapmo-secondary-button {
   background: transparent;
   color: #0a1628;
   border: 1px solid #0a1628;
+}
+
+.tapmo-action-row .tapmo-secondary-button:hover,
+.tapmo-secondary-button:hover {
+  background: rgba(10, 22, 40, 0.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .tapmo-section-title {
