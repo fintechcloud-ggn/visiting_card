@@ -2577,8 +2577,8 @@ input:focus {
 
 .tapmo-action-row .tapmo-primary-button:hover,
 .tapmo-primary-button:hover {
-  background: #0f2a7a;
-  border-color: #0f2a7a;
+  background: #475569;
+  border-color: #475569;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -2592,7 +2592,7 @@ input:focus {
 
 .tapmo-action-row .tapmo-secondary-button:hover,
 .tapmo-secondary-button:hover {
-  background: rgba(10, 22, 40, 0.05);
+  background: #e2e8f0;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
