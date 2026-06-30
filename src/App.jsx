@@ -461,19 +461,18 @@ function ContactIcon({ name }) {
 }
 
 function getCleanAddress(card) {
-  let addr = card.officeAddress;
-  if (!addr) return '';
+  if (!card.officeAddress) return '';
   
-  if (card.companyName) {
-    addr = addr.replace(new RegExp(card.companyName, 'gi'), '');
+  // Split by newline to isolate the actual physical address from headers
+  const lines = card.officeAddress.split('\n').map(l => l.trim()).filter(Boolean);
+  
+  // If the address has 4 or more lines, the first two are usually "Corporate Office" and "Company Name".
+  // Drop them to ensure Google Maps gets only the physical address (e.g. Plot No...).
+  if (lines.length >= 4) {
+    return lines.slice(2).join(', ');
   }
   
-  addr = addr.replace(/Corporate Office|Head Office|Branch Office/gi, '');
-  addr = addr.replace(/\n/g, ', ').replace(/,+/g, ',').trim();
-  
-  if (addr.startsWith(',')) addr = addr.substring(1).trim();
-  
-  return addr;
+  return lines.join(', ');
 }
 
 function getContactItems(card, whatsappNumber, websiteUrl) {
