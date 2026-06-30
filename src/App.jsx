@@ -460,13 +460,29 @@ function ContactIcon({ name }) {
   )
 }
 
+function getCleanAddress(card) {
+  let addr = card.officeAddress;
+  if (!addr) return '';
+  
+  if (card.companyName) {
+    addr = addr.replace(new RegExp(card.companyName, 'gi'), '');
+  }
+  
+  addr = addr.replace(/Corporate Office|Head Office|Branch Office/gi, '');
+  addr = addr.replace(/\n/g, ', ').replace(/,+/g, ',').trim();
+  
+  if (addr.startsWith(',')) addr = addr.substring(1).trim();
+  
+  return addr;
+}
+
 function getContactItems(card, whatsappNumber, websiteUrl) {
   return [
     card.mobile && { key: 'phone', icon: 'phone', label: card.mobile, href: `tel:${card.mobile}` },
     whatsappNumber && { key: 'whatsapp', icon: 'whatsapp', label: 'WhatsApp Chat', href: `https://wa.me/${whatsappNumber}` },
     card.email && { key: 'email', icon: 'mail', label: card.email, href: `mailto:${card.email}` },
     websiteUrl && { key: 'website', icon: 'link', label: card.website, href: websiteUrl },
-    card.officeAddress && { key: 'address', icon: 'pin', label: card.officeAddress, href: `https://maps.google.com/?q=${encodeURIComponent(card.officeAddress)}` },
+    card.officeAddress && { key: 'address', icon: 'pin', label: card.officeAddress, href: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(getCleanAddress(card))}` },
     card.companyName && { key: 'company', icon: 'company', label: card.companyName, href: null },
   ].filter(Boolean)
 }
@@ -614,20 +630,7 @@ function LoginForm({ onSubmit, onBack, error }) {
         <button className="login-back-button" type="button" onClick={onBack} aria-label="Back">
           ‹
         </button>
-        <div className="admin-brand">VisitingCard</div>
-        <div className="dashed-route route-one" />
-        <div className="dashed-route route-two" />
-        <div className="decor decor-gear">⚙</div>
-        <div className="decor decor-pin" />
-        <div className="decor decor-warning">!</div>
-        <div className="decor decor-lock" />
-        <div className="decor decor-plane" />
-        <div className="login-character" aria-hidden="true">
-          <div className="character-head" />
-          <div className="character-body" />
-          <div className="character-card card-left" />
-          <div className="character-card card-right" />
-        </div>
+
 
         <form className="login-card" onSubmit={onSubmit}>
           <h1>Welcome back!</h1>
@@ -653,22 +656,22 @@ function LoginForm({ onSubmit, onBack, error }) {
             </button>
           </label>
           {error && <p className="login-error">{error}</p>}
-          <a className="forgot-link" href="#forgot">
+          {/* <a className="forgot-link" href="#forgot">
             Forgot Password?
-          </a>
+          </a> */}
           <div className="form-actions">
             <button type="submit">Sign In <span>→</span></button>
           </div>
-          <div className="signin-divider"><span>Or Sign in with</span></div>
-          <button className="google-button" type="button">
+          {/* <div className="signin-divider"><span>Or Sign in with</span></div> */}
+          {/* <button className="google-button" type="button">
             <b>G</b> Continue with Google
-          </button>
+          </button> */}
         </form>
-        <div className="login-footer">
+        {/* <div className="login-footer">
           <span>Privacy Settings</span>
           <span>|</span>
           <span>Terms & Conditions</span>
-        </div>
+        </div> */}
       </section>
     </main>
   )
@@ -730,7 +733,7 @@ function CardFront({ card, publicUrl, showQr = false }) {
   const themeKey = normalizeThemeKey(card.theme)
   const theme = getCompanyTheme(themeKey)
   return (
-    <article 
+    <article
       className={`physical-preview-card physical-preview-card-front ${themeKey === 'fintech' ? 'theme-fintech-front' : theme.className} ${!hasPhoto ? 'no-photo' : ''}`}
       style={themeKey === 'fintech' ? undefined : getThemeStyleVars(theme)}
     >
@@ -1238,10 +1241,10 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
               <form noValidate>
                 <label>
                   Theme
-                  <select 
-                    name="theme" 
-                    value={cardToEdit.theme || 'classic'} 
-                    onChange={(e) => setCardToEdit({...cardToEdit, theme: e.target.value})}
+                  <select
+                    name="theme"
+                    value={cardToEdit.theme || 'classic'}
+                    onChange={(e) => setCardToEdit({ ...cardToEdit, theme: e.target.value })}
                     className="edit-theme-select"
                   >
                     {cardThemeOptions.map(option => (
@@ -1251,57 +1254,57 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                 </label>
                 <label>
                   Name
-                  <input 
-                    name="name" 
-                    value={cardToEdit.name} 
-                    onChange={(e) => setCardToEdit({...cardToEdit, name: e.target.value})} 
-                    placeholder="Full Name" 
+                  <input
+                    name="name"
+                    value={cardToEdit.name}
+                    onChange={(e) => setCardToEdit({ ...cardToEdit, name: e.target.value })}
+                    placeholder="Full Name"
                   />
                 </label>
                 <label>
                   Mobile
-                  <input 
-                    name="mobile" 
-                    value={cardToEdit.mobile} 
-                    onChange={(e) => setCardToEdit({...cardToEdit, mobile: e.target.value})} 
-                    placeholder="Mobile Number" 
+                  <input
+                    name="mobile"
+                    value={cardToEdit.mobile}
+                    onChange={(e) => setCardToEdit({ ...cardToEdit, mobile: e.target.value })}
+                    placeholder="Mobile Number"
                   />
                 </label>
                 <label>
                   Designation
-                  <input 
-                    name="designation" 
-                    value={cardToEdit.designation} 
-                    onChange={(e) => setCardToEdit({...cardToEdit, designation: e.target.value})} 
-                    placeholder="Job Title" 
+                  <input
+                    name="designation"
+                    value={cardToEdit.designation}
+                    onChange={(e) => setCardToEdit({ ...cardToEdit, designation: e.target.value })}
+                    placeholder="Job Title"
                   />
                 </label>
                 <label>
                   Company Name
-                  <input 
-                    name="companyName" 
-                    value={cardToEdit.companyName} 
-                    onChange={(e) => setCardToEdit({...cardToEdit, companyName: e.target.value})} 
-                    placeholder="Company Name" 
+                  <input
+                    name="companyName"
+                    value={cardToEdit.companyName}
+                    onChange={(e) => setCardToEdit({ ...cardToEdit, companyName: e.target.value })}
+                    placeholder="Company Name"
                   />
                 </label>
                 <label>
                   Email
-                  <input 
-                    name="email" 
+                  <input
+                    name="email"
                     type="email"
-                    value={cardToEdit.email} 
-                    onChange={(e) => setCardToEdit({...cardToEdit, email: e.target.value})} 
-                    placeholder="Email Address" 
+                    value={cardToEdit.email}
+                    onChange={(e) => setCardToEdit({ ...cardToEdit, email: e.target.value })}
+                    placeholder="Email Address"
                   />
                 </label>
                 <label>
                   Website
-                  <input 
-                    name="website" 
-                    value={cardToEdit.website} 
-                    onChange={(e) => setCardToEdit({...cardToEdit, website: e.target.value})} 
-                    placeholder="Website URL" 
+                  <input
+                    name="website"
+                    value={cardToEdit.website}
+                    onChange={(e) => setCardToEdit({ ...cardToEdit, website: e.target.value })}
+                    placeholder="Website URL"
                   />
                 </label>
                 <label>
@@ -1340,10 +1343,10 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                 )}
                 <label>
                   Office Address
-                  <textarea 
-                    name="officeAddress" 
-                    value={cardToEdit.officeAddress} 
-                    onChange={(e) => setCardToEdit({...cardToEdit, officeAddress: e.target.value})} 
+                  <textarea
+                    name="officeAddress"
+                    value={cardToEdit.officeAddress}
+                    onChange={(e) => setCardToEdit({ ...cardToEdit, officeAddress: e.target.value })}
                     placeholder="Full Address"
                     rows="3"
                   />
@@ -1422,6 +1425,23 @@ function PublicCardPage({ card, onClose }) {
     shareCard()
   }
 
+  function handleLocationClick() {
+    const destination = encodeURIComponent(getCleanAddress(card));
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          window.open(`https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${destination}`, '_blank');
+        },
+        () => {
+          window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank');
+        }
+      );
+    } else {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank');
+    }
+  }
+
   function downloadVcard() {
     const vcardText = getVcard(card)
     const blob = new Blob([vcardText], { type: 'text/vcard;charset=utf-8' })
@@ -1460,7 +1480,7 @@ function PublicCardPage({ card, onClose }) {
         {!isShareOpen && (
           <div className="tapmo-action-row tapmo-card-actions">
             {card.officeAddress && (
-              <button type="button" className="tapmo-secondary-button" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(card.officeAddress)}`, '_blank')}>Location</button>
+              <button type="button" className="tapmo-secondary-button" onClick={handleLocationClick}>Location</button>
             )}
             <button type="button" className="tapmo-secondary-button" onClick={downloadVcard}>Save Contact</button>
             <button type="button" className="tapmo-primary-button" onClick={exchangeContact}>Exchange Contact</button>

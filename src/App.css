@@ -837,11 +837,13 @@
   width: min(1420px, 100%);
   aspect-ratio: 4 / 3;
   min-height: 680px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10%;
   overflow: hidden;
   border-radius: 12px;
-  background: url('/Dashboard.png?v=20260616-1150') center / cover no-repeat #f7f7f7;
+  background: url('/At%20the%20office-rafiki.svg') left 5% center / 65% no-repeat #fdfdfd;
   box-shadow: 0 18px 34px rgba(15, 23, 42, 0.18);
 }
 
@@ -958,13 +960,7 @@
   cursor: pointer;
 }
 
-.admin-login-stage .admin-brand,
-.admin-login-stage .dashed-route,
-.admin-login-stage .decor,
-.admin-login-stage .login-character,
-.admin-login-stage .login-footer {
-  display: none;
-}
+
 
 .admin-brand {
   position: absolute;
@@ -2559,12 +2555,14 @@ input:focus {
   min-width: 120px;
 }
 
-.tapmo-card-actions button {
+.tapmo-primary-button,
+.tapmo-secondary-button {
   width: 100%;
   border-radius: 18px;
   padding: 15px 18px;
   font-size: 15px;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .tapmo-primary-button {
@@ -5079,20 +5077,16 @@ input:focus {
     radial-gradient(circle at 15% 85%, rgba(14, 116, 201, 0.12) 0%, transparent 35%),
     radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.15) 0%, transparent 30%),
     radial-gradient(circle at 50% 50%, rgba(186, 230, 253, 0.08) 0%, transparent 60%),
-    repeating-linear-gradient(
-      0deg,
+    repeating-linear-gradient(0deg,
       transparent,
       transparent 28px,
       rgba(14, 116, 201, 0.06) 28px,
-      rgba(14, 116, 201, 0.06) 29px
-    ),
-    repeating-linear-gradient(
-      90deg,
+      rgba(14, 116, 201, 0.06) 29px),
+    repeating-linear-gradient(90deg,
       transparent,
       transparent 28px,
       rgba(14, 116, 201, 0.06) 28px,
-      rgba(14, 116, 201, 0.06) 29px
-    ),
+      rgba(14, 116, 201, 0.06) 29px),
     linear-gradient(135deg, #e8f4fd 0%, #dbeeff 50%, #e0f2fe 100%) !important;
   color: #0a1628 !important;
   position: relative !important;
@@ -5110,7 +5104,7 @@ input:focus {
   z-index: 0;
 }
 
-.theme-fintech-front > * {
+.theme-fintech-front>* {
   position: relative;
   z-index: 1;
 }
