@@ -463,6 +463,12 @@ function ContactIcon({ name }) {
 function getCleanAddress(card) {
   if (!card.officeAddress) return '';
   
+  // Google Maps has a mapping error in this area and snaps Plot 296 to "Lite Bite Foods".
+  // To bypass this and show the correct name and location, we use coordinates + label format for Fintech Cloud.
+  if (card.companyName && card.companyName.toLowerCase().includes('fintech cloud')) {
+    return '28.4981,77.0805 (Fintech Cloud Pvt. Ltd., Plot No. 296)';
+  }
+  
   // Split by newline to isolate the actual physical address from headers
   const lines = card.officeAddress.split('\n').map(l => l.trim()).filter(Boolean);
   
