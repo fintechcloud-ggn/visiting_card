@@ -2555,6 +2555,8 @@ input:focus {
   min-width: 120px;
 }
 
+.tapmo-action-row .tapmo-primary-button,
+.tapmo-action-row .tapmo-secondary-button,
 .tapmo-primary-button,
 .tapmo-secondary-button {
   width: 100%;
@@ -2565,16 +2567,18 @@ input:focus {
   cursor: pointer;
 }
 
+.tapmo-action-row .tapmo-primary-button,
 .tapmo-primary-button {
   background: #07163f;
   color: #fff;
   border: 1px solid #07163f;
 }
 
+.tapmo-action-row .tapmo-secondary-button,
 .tapmo-secondary-button {
-  background: #fff;
-  color: #07163f;
-  border: 1px solid #07163f;
+  background: transparent;
+  color: #0a1628;
+  border: 1px solid #0a1628;
 }
 
 .tapmo-section-title {
