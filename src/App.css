@@ -5077,31 +5077,9 @@ input:focus {
     radial-gradient(circle at 15% 85%, rgba(14, 116, 201, 0.12) 0%, transparent 35%),
     radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.15) 0%, transparent 30%),
     radial-gradient(circle at 50% 50%, rgba(186, 230, 253, 0.08) 0%, transparent 60%),
-    repeating-linear-gradient(0deg,
-      transparent,
-      transparent 28px,
-      rgba(14, 116, 201, 0.06) 28px,
-      rgba(14, 116, 201, 0.06) 29px),
-    repeating-linear-gradient(90deg,
-      transparent,
-      transparent 28px,
-      rgba(14, 116, 201, 0.06) 28px,
-      rgba(14, 116, 201, 0.06) 29px),
     linear-gradient(135deg, #e8f4fd 0%, #dbeeff 50%, #e0f2fe 100%) !important;
   color: #0a1628 !important;
   position: relative !important;
-}
-
-.theme-fintech-front::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle, rgba(14, 116, 201, 0.18) 1.5px, transparent 1.5px);
-  background-size: 28px 28px;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .theme-fintech-front>* {
