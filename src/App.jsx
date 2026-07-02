@@ -139,6 +139,24 @@ const cardThemeOptions = Object.entries(CARD_THEMES).map(([value, theme]) => ({
   label: theme.label,
 }))
 
+const OFFICE_LOCATIONS = [
+  {
+    label: 'Gurugram Office',
+    address: 'Plot No. 296, DLF Phase IV ,\nUdyog Vihar, Gurugram,\nHaryana - 122015',
+    mapQuery: '28.498889516274883,77.0803163944872'
+  },
+  {
+    label: 'New Delhi Office',
+    address: 'S-370,  Block S, Panchsheel Park, New Delhi, Delhi 110017',
+    mapQuery: '28.54172691467726,77.21962274169731'
+  },
+  {
+    label: 'Noida Office',
+    address: 'H-144, H Block, Sector 63, Noida, Uttar Pradesh 201301',
+    mapQuery: '28.625917432534813,77.37813031070044'
+  }
+];
+
 function encodeCard(card) {
   return btoa(encodeURIComponent(JSON.stringify(card)))
 }
@@ -462,10 +480,22 @@ function ContactIcon({ name }) {
 
 function getCleanAddress(card) {
   if (!card.officeAddress) return '';
-  
+
+  // Google Maps has a mapping error in this area and snaps Plot 296 to "Lite Bite Foods".
+  // To bypass this and show the correct name and location, we use coordinates + label format for Fintech Cloud.
+  if (card.companyName && card.companyName.toLowerCase().includes('fintech cloud')) {
+    return '28.4981,77.0805 (Fintech Cloud Pvt. Ltd., Plot No. 296)';
+  }
+
   // Split by newline to isolate the actual physical address from headers
   const lines = card.officeAddress.split('\n').map(l => l.trim()).filter(Boolean);
-  
+
+  // If the address has 4 or more lines, the first two are usually "Corporate Office" and "Company Name".
+  // Drop them to ensure Google Maps gets only the physical address (e.g. Plot No...).
+  if (lines.length >= 4) {
+    return lines.slice(2).join(', ');
+  }
+
   return lines.join(', ');
 }
 
@@ -475,7 +505,7 @@ function getContactItems(card, whatsappNumber, websiteUrl) {
     whatsappNumber && { key: 'whatsapp', icon: 'whatsapp', label: 'WhatsApp Chat', href: `https://wa.me/${whatsappNumber}` },
     card.email && { key: 'email', icon: 'mail', label: card.email, href: `mailto:${card.email}` },
     websiteUrl && { key: 'website', icon: 'link', label: card.website, href: websiteUrl },
-    card.officeAddress && { key: 'address', icon: 'pin', label: card.officeAddress, href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getCleanAddress(card))}` },
+    card.officeAddress && { key: 'address', icon: 'pin', label: card.officeAddress, href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((() => { const loc = OFFICE_LOCATIONS.find(l => l.address === card.officeAddress); return loc ? loc.mapQuery : getCleanAddress(card); })())}` },
     card.companyName && { key: 'company', icon: 'company', label: card.companyName, href: null },
   ].filter(Boolean)
 }
@@ -749,7 +779,7 @@ function CardFront({ card, publicUrl, showQr = false }) {
             />
           </div>
         )}
-        <div className="physical-header-group">
+        <div>
           <div className="physical-signature">{card.name || 'Client Name'}</div>
           <div className="physical-role">{card.designation || 'Designation'}</div>
           {themeKey !== 'fintech' && <div className="physical-company">{card.companyName || 'Company Name'}</div>}
@@ -1130,7 +1160,12 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
           </label>
           <label>
             Office Address
-            <textarea name="officeAddress" value={card.officeAddress} onChange={updateField} placeholder="Office address" rows={4} />
+            <select name="officeAddress" value={card.officeAddress} onChange={updateField}>
+              <option value="">Select an office address</option>
+              {OFFICE_LOCATIONS.map((loc, i) => (
+                <option key={i} value={loc.address}>{loc.label}</option>
+              ))}
+            </select>
           </label>
           <label>
             Email
@@ -1419,8 +1454,9 @@ function PublicCardPage({ card, onClose }) {
   }
 
   function handleLocationClick() {
-    const destination = encodeURIComponent(getCleanAddress(card));
-    window.open(`https://www.google.com/maps/search/?api=1&query=${destination}`, '_blank');
+    const matchedLoc = OFFICE_LOCATIONS.find(loc => loc.address === card.officeAddress);
+    const query = encodeURIComponent(matchedLoc ? matchedLoc.mapQuery : getCleanAddress(card));
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   }
 
   function downloadVcard() {
