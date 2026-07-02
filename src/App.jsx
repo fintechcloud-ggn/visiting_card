@@ -463,20 +463,8 @@ function ContactIcon({ name }) {
 function getCleanAddress(card) {
   if (!card.officeAddress) return '';
   
-  // Google Maps has a mapping error in this area and snaps Plot 296 to "Lite Bite Foods".
-  // To bypass this and show the correct name and location, we use coordinates + label format for Fintech Cloud.
-  if (card.companyName && card.companyName.toLowerCase().includes('fintech cloud')) {
-    return '28.4981,77.0805 (Fintech Cloud Pvt. Ltd., Plot No. 296)';
-  }
-  
   // Split by newline to isolate the actual physical address from headers
   const lines = card.officeAddress.split('\n').map(l => l.trim()).filter(Boolean);
-  
-  // If the address has 4 or more lines, the first two are usually "Corporate Office" and "Company Name".
-  // Drop them to ensure Google Maps gets only the physical address (e.g. Plot No...).
-  if (lines.length >= 4) {
-    return lines.slice(2).join(', ');
-  }
   
   return lines.join(', ');
 }
@@ -487,7 +475,7 @@ function getContactItems(card, whatsappNumber, websiteUrl) {
     whatsappNumber && { key: 'whatsapp', icon: 'whatsapp', label: 'WhatsApp Chat', href: `https://wa.me/${whatsappNumber}` },
     card.email && { key: 'email', icon: 'mail', label: card.email, href: `mailto:${card.email}` },
     websiteUrl && { key: 'website', icon: 'link', label: card.website, href: websiteUrl },
-    card.officeAddress && { key: 'address', icon: 'pin', label: card.officeAddress, href: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(getCleanAddress(card))}` },
+    card.officeAddress && { key: 'address', icon: 'pin', label: card.officeAddress, href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getCleanAddress(card))}` },
     card.companyName && { key: 'company', icon: 'company', label: card.companyName, href: null },
   ].filter(Boolean)
 }
@@ -761,7 +749,7 @@ function CardFront({ card, publicUrl, showQr = false }) {
             />
           </div>
         )}
-        <div>
+        <div className="physical-header-group">
           <div className="physical-signature">{card.name || 'Client Name'}</div>
           <div className="physical-role">{card.designation || 'Designation'}</div>
           {themeKey !== 'fintech' && <div className="physical-company">{card.companyName || 'Company Name'}</div>}
@@ -1432,19 +1420,7 @@ function PublicCardPage({ card, onClose }) {
 
   function handleLocationClick() {
     const destination = encodeURIComponent(getCleanAddress(card));
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          window.open(`https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${destination}`, '_blank');
-        },
-        () => {
-          window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank');
-        }
-      );
-    } else {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank');
-    }
+    window.open(`https://www.google.com/maps/search/?api=1&query=${destination}`, '_blank');
   }
 
   function downloadVcard() {

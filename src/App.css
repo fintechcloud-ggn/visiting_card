@@ -4721,6 +4721,12 @@ input:focus {
   grid-template-columns: 1fr 38% !important;
 }
 
+
+
+.theme-tech.physical-preview-card-front.no-photo {
+  grid-template-columns: 1fr !important;
+}
+
 .theme-tech .physical-preview-photo {
   order: 2;
   margin: 22px 22px 22px 14px !important;
@@ -4733,9 +4739,13 @@ input:focus {
 .theme-tech .physical-preview-details {
   order: 1;
   position: static !important;
-  padding: 16% 6% 6% 4% !important;
+  padding: 12% 6% 12% 35% !important;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
   align-items: flex-end;
   text-align: right;
+  gap: 24px;
 }
 
 .theme-tech .physical-signature {
