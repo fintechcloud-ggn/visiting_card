@@ -147,12 +147,12 @@ const OFFICE_LOCATIONS = [
   },
   {
     label: 'New Delhi Office',
-    address: 'S-370,  Block S, Panchsheel Park, New Delhi, Delhi 110017',
+    address: 'S-370, Block S,\nPanchsheel Park, New Delhi,\nDelhi - 110017',
     mapQuery: '28.54172691467726,77.21962274169731'
   },
   {
     label: 'Noida Office',
-    address: 'H-144, H Block, Sector 63, Noida, Uttar Pradesh 201301',
+    address: 'H-144, H Block,\nSector 63, Noida,\nUttar Pradesh - 201301',
     mapQuery: '28.625917432534813,77.37813031070044'
   }
 ];
