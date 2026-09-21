@@ -1048,6 +1048,37 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
     reader.readAsDataURL(file)
   }
 
+  function openEditCard(savedCard) {
+    setCardToEdit({ ...emptyCard, ...savedCard, theme: normalizeThemeKey(savedCard.theme) })
+    setMessage('')
+  }
+
+  function updateEditField(event) {
+    const { name, value } = event.target
+    setCardToEdit((current) => ({ ...current, [name]: value }))
+  }
+
+  async function saveEditedCard() {
+    if (!cardToEdit) return
+
+    if (!cardToEdit.name.trim() || !cardToEdit.mobile.trim() || !cardToEdit.designation.trim() || !cardToEdit.companyName.trim() || !cardToEdit.officeAddress.trim()) {
+      setMessage('Please fill name, mobile number, designation, company name, and office address.')
+      return
+    }
+
+    const updatedCard = Object.fromEntries(
+      Object.entries(cardToEdit).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
+    )
+
+    try {
+      await onCreate(updatedCard)
+      setCardToEdit(null)
+      setMessage('Card updated successfully.')
+    } catch (error) {
+      setMessage(error.message || 'Card could not be updated. Please try again.')
+    }
+  }
+
   async function createCard() {
     if (!card.name.trim() || !card.mobile.trim() || !card.designation.trim() || !card.companyName.trim() || !card.officeAddress.trim()) {
       setMessage('Please fill name, mobile number, designation, company name, and office address.')
@@ -1235,7 +1266,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                   <button className="secondary-button" onClick={() => setCardToPrint(savedCard)}>
                     Print
                   </button>
-                  <button className="secondary-button" onClick={() => setCardToEdit(savedCard)}>
+                  <button className="secondary-button" onClick={() => openEditCard(savedCard)}>
                     Edit
                   </button>
                   <button className="danger-button" onClick={() => onDelete(savedCard)}>
@@ -1272,7 +1303,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                   <select
                     name="theme"
                     value={cardToEdit.theme || 'classic'}
-                    onChange={(e) => setCardToEdit({ ...cardToEdit, theme: e.target.value })}
+                    onChange={updateEditField}
                     className="edit-theme-select"
                   >
                     {cardThemeOptions.map(option => (
@@ -1285,7 +1316,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                   <input
                     name="name"
                     value={cardToEdit.name}
-                    onChange={(e) => setCardToEdit({ ...cardToEdit, name: e.target.value })}
+                    onChange={updateEditField}
                     placeholder="Full Name"
                   />
                 </label>
@@ -1294,7 +1325,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                   <input
                     name="mobile"
                     value={cardToEdit.mobile}
-                    onChange={(e) => setCardToEdit({ ...cardToEdit, mobile: e.target.value })}
+                    onChange={updateEditField}
                     placeholder="Mobile Number"
                   />
                 </label>
@@ -1303,7 +1334,7 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                   <input
                     name="designation"
                     value={cardToEdit.designation}
-                    onChange={(e) => setCardToEdit({ ...cardToEdit, designation: e.target.value })}
+                    onChange={updateEditField}
                     placeholder="Job Title"
                   />
                 </label>
@@ -1312,27 +1343,8 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                   <input
                     name="companyName"
                     value={cardToEdit.companyName}
-                    onChange={(e) => setCardToEdit({ ...cardToEdit, companyName: e.target.value })}
+                    onChange={updateEditField}
                     placeholder="Company Name"
-                  />
-                </label>
-                <label>
-                  Email
-                  <input
-                    name="email"
-                    type="email"
-                    value={cardToEdit.email}
-                    onChange={(e) => setCardToEdit({ ...cardToEdit, email: e.target.value })}
-                    placeholder="Email Address"
-                  />
-                </label>
-                <label>
-                  Website
-                  <input
-                    name="website"
-                    value={cardToEdit.website}
-                    onChange={(e) => setCardToEdit({ ...cardToEdit, website: e.target.value })}
-                    placeholder="Website URL"
                   />
                 </label>
                 <label>
@@ -1371,22 +1383,77 @@ function AdminDashboard({ cards, onCreate, onDelete, onLogout, onView, onEdit })
                 )}
                 <label>
                   Office Address
-                  <textarea
+                  <select
                     name="officeAddress"
                     value={cardToEdit.officeAddress}
-                    onChange={(e) => setCardToEdit({ ...cardToEdit, officeAddress: e.target.value })}
-                    placeholder="Full Address"
-                    rows="3"
+                    onChange={updateEditField}
+                  >
+                    <option value="">Select an office address</option>
+                    {OFFICE_LOCATIONS.map((loc, index) => (
+                      <option key={index} value={loc.address}>{loc.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Email
+                  <input
+                    name="email"
+                    type="email"
+                    value={cardToEdit.email}
+                    onChange={updateEditField}
+                    placeholder="Email Address"
+                  />
+                </label>
+                <label>
+                  Website
+                  <input
+                    name="website"
+                    value={cardToEdit.website}
+                    onChange={updateEditField}
+                    placeholder="Website URL"
+                  />
+                </label>
+                <label>
+                  LinkedIn
+                  <input
+                    name="linkedin"
+                    value={cardToEdit.linkedin}
+                    onChange={updateEditField}
+                    placeholder="linkedin.com/in/profile"
+                  />
+                </label>
+                <label>
+                  YouTube
+                  <input
+                    name="youtube"
+                    value={cardToEdit.youtube}
+                    onChange={updateEditField}
+                    placeholder="youtube.com/@channel"
+                  />
+                </label>
+                <label>
+                  Facebook
+                  <input
+                    name="facebook"
+                    value={cardToEdit.facebook}
+                    onChange={updateEditField}
+                    placeholder="facebook.com/profile"
+                  />
+                </label>
+                <label>
+                  Instagram
+                  <input
+                    name="instagram"
+                    value={cardToEdit.instagram}
+                    onChange={updateEditField}
+                    placeholder="instagram.com/profile"
                   />
                 </label>
               </form>
             </div>
             <div className="modal-actions">
               <button className="secondary-button" onClick={() => setCardToEdit(null)}>Cancel</button>
-              <button className="admin-login-button" onClick={() => {
-                onCreate(cardToEdit)
-                setCardToEdit(null)
-              }} type="button">Save Changes</button>
+              <button className="admin-login-button" onClick={saveEditedCard} type="button">Save Changes</button>
             </div>
           </div>
         </div>
